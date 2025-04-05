@@ -10,8 +10,7 @@ using namespace std;
 
 vector<Voo> voos;
 vector<vector<int>> tempo_espera;
-//n = voos m = pistas
-int n, m = 0;
+int n, m =0;
 
 bool lerDados(const string& nome_arquivo) {
     ifstream MyReadFile(nome_arquivo);
@@ -27,7 +26,7 @@ bool lerDados(const string& nome_arquivo) {
     //r = tempos mínimos
     for (int i = 0; i < n; i++) {
         MyReadFile >> voos[i].horario;
-        voos[i].id_voo = i;
+        voos[i].id = i;
     }
 
     //c = duração
@@ -56,7 +55,7 @@ void exibirDados() {
 
     cout << "\nVoos:\n";
     for (const auto& voo : voos) {
-        cout << "Voo " << voo.id_voo + 1
+        cout << "Voo " << voo.id + 1
              << ", horario: " << voo.horario
              << ", duracao: " << voo.duracao
              << ", penalidade: " << voo.penalidade << endl;
