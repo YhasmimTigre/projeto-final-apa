@@ -10,16 +10,28 @@ bool compararPorLiberacao(const Voo &a, const Voo &b) {
     return a.horario < b.horario;
 }
 
-void atualizarVooePista(vector<Voo> &voos, int i, int tempo) { // i = indice do voo
-    tempo = tempo_espera[i-1][i];
+void atualizarVooEPista(vector<Voo> &voos, vector<int> &pistas, 
+    const vector<vector<int>> &tempo_espera, 
+    int indice_voo, int pista_id) {// i = indice do voo
+
+    if(indice_voo <= 0 || indice_voo >= voos.size()) return;    
+
+    int tempo = tempo_espera[voos[indice_voo-1].id][voos[indice_voo].id];
+
+    // Atualiza horário real do voo
+    voos[indice_voo].horario_real = 
+    max(voos[indice_voo-1].horario_real + voos[indice_voo-1].duracao + tempo,
+        voos[indice_voo].horario_prev);
+
+    // Calcula multa por atraso
+
+    voos[indice_voo].multa = 
+        voos[indice_voo].penalidade * 
+        max(0, voos[indice_voo].horario_real - voos[indice_voo].horario_prev);
 
 
-    voo[i].horario_real = voo[i-1].horario_real + voo[i-1].duracao + tempo;
-    voo[i].multa = voo[i].penalidade * (voo[i].horario_real - voo[i].horario_prev);
-
-
-    // Atualiza o horario de disponibilidade da pista
-    pistas[i] = max(pistas[i], voo[i].horario_real) + voo[i].duracao + tempo;
+    // Atualiza disponibilidade da pista
+    pistas[pista_id] = voos[indice_voo].horario_real + voos[indice_voo].duracao;
 }
 
 
