@@ -16,8 +16,6 @@ struct Voo {
 
 extern vector<Voo> voos;
 extern vector<vector<int>> tempo_espera;
-extern int numero_voos;
-extern int numero_pistas;
 
 bool lerDados(const string& nome_arquivo);
 void exibirDados();
