@@ -2,11 +2,11 @@ CXX = g++
 
 CXXFLAGS = -std=c++11 -Wall
 
-TARGET = programa_voo
+TARGET = main
 
-SRCS = main.cpp
+SRCS = main.cpp funcoes/dados.cpp guloso.cpp
 
-OBJS = $(SRCS: .cpp= .o)
+OBJS = $(SRCS:.cpp=.o)
 
 all: $(TARGET)
 

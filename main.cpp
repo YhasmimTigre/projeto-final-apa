@@ -1,5 +1,5 @@
 #include <iostream>
-#include "funcoes\dados.h"
+#include "funcoes/dados.h"
 
 using namespace std;
 

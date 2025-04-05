@@ -7,7 +7,7 @@ using namespace std;
 #include <string>
 
 struct Voo {
-    int id, horario, duracao, penalidade;
+    int id, horario_prev, horario_real, duracao, penalidade;
 };
 
 extern vector<Voo> voos;

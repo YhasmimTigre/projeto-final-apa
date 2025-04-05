@@ -1,2 +1,8 @@
 *.exe
-.idea
+.idea*
+.vscode*
+*.o
+
+*.py
+*.png
+alocacao_voos.txt

@@ -25,7 +25,7 @@ bool lerDados(const string& nome_arquivo) {
 
     //r = tempos mínimos
     for (int i = 0; i < n; i++) {
-        MyReadFile >> voos[i].horario;
+        MyReadFile >> voos[i].horario_prev;
         voos[i].id = i;
     }
 
@@ -56,7 +56,7 @@ void exibirDados() {
     cout << "\nVoos:\n";
     for (const auto& voo : voos) {
         cout << "Voo " << voo.id + 1
-             << ", horario: " << voo.horario
+             << ", horario: " << voo.horario_prev
              << ", duracao: " << voo.duracao
              << ", penalidade: " << voo.penalidade << endl;
     }
