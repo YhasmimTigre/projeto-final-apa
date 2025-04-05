@@ -2,14 +2,9 @@
 #include <vector>
 #include <algorithm>
 
-using namespace std;
+#include "funcoes/dados.h"
 
-// Estrutura para armazenar informações do voo
-struct Voo {
-    int id;       // Identificador do voo
-    int r_i;      // Tempo de liberação
-    int duracao;  // Tempo necessário na pista (ex: taxiamento/pouso/decolagem)
-};
+dados.LerDados
 
 // Função de comparação para ordenar voos pelo tempo de liberação
 bool compararPorLiberacao(const Voo &a, const Voo &b) {
@@ -38,21 +33,4 @@ void alocarVoos(vector<Voo> &voos, int numPistas) {
             }
         }
     }
-}
-
-// Função principal
-int main() {
-    // Lista de voos (id, tempo de liberação, duração na pista)
-    vector<Voo> voos = {
-        {1, 10, 3},
-        {2, 5, 2},
-        {3, 8, 1},
-        {4, 3, 2}
-    };
-
-    int numPistas = 2; // Número de pistas disponíveis
-
-    alocarVoos(voos, numPistas);
-
-    return 0;
 }
