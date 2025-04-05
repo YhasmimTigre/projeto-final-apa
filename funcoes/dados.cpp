@@ -10,6 +10,7 @@ using namespace std;
 
 vector<Voo> voos;
 vector<vector<int>> tempo_espera;
+//n = voos m = pistas
 int n, m = 0;
 
 bool lerDados(const string& nome_arquivo) {
