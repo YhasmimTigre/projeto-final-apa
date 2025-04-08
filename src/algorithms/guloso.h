@@ -1,7 +1,7 @@
 //Para receber as funções a serem usadas no VND
 
-#ifdef guloso_h
-#define guloso_h
+#ifdef GULOSO_H
+#define GULOSO_H
 
 int calcularPenalidade(pistas, t);
 

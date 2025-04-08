@@ -1,5 +1,5 @@
-#ifndef DADOS_H
-#define DADOS_H
+#ifndef AIRPORT_LOADER_H
+#define AIRPORT_LOADER_H
 
 using namespace std;
 

@@ -1,5 +1,6 @@
 #include <iostream>
-#include "funcoes/dados.h"
+#include "src/core/airport_loader.h"
+#include "src/algorithms/guloso.h"
 
 using namespace std;
 

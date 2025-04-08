@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <limits>
 #include <random>
-#include "funcoes/dados.h"
+#include "../core/airport_loader.h"
 #include "guloso.h"
 
 using namespace std; // tem q declarar em todo arquivo? não basta estar em dados.h?
