@@ -5,4 +5,14 @@
 
 int calcularPenalidade(pistas, t);
 
+struct Pista {
+    int id;
+    int tempo_liberacao;
+    vector<Voos> voos_alocados;
+};
+
+struct Problema {
+    vector<Pista> pistas;
+    int solucao;
+}
 #endif
