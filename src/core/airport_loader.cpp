@@ -1,7 +1,3 @@
-//
-// Created by kamil on 05/04/2025.
-//
-
 #include "airport_loader.h"
 #include <fstream>
 #include <iostream>
@@ -68,4 +64,47 @@ void exibirDados() {
         }
         cout << endl;
     }
+}
+
+void calcularMultas() {
+    for (auto& voo : voos) {
+        int atraso = max(0, voo.horario_real - voo.horario_prev);
+        voo.multa = atraso * voo.penalidade;
+    }
+}
+
+int calcularCustoTotal() {
+    int total = 0;
+    for (const auto& voo : voos) {
+        total += voo.multa;
+    }
+    return total;
+}
+
+void escreverSolucao(const string& nome_arquivo, int custo_total) {
+    ofstream saida(nome_arquivo);
+    if (!saida) {
+        cerr << "Erro ao criar arquivo de saída" << endl;
+        return;
+    }
+
+    saida << custo_total << endl;
+
+    // Agrupa voos por pista
+    vector<vector<int>> voos_por_pista(m);
+    for (const auto& voo : voos) {
+        if (voo.pista_alocada >= 0 && voo.pista_alocada < m) {
+            voos_por_pista[voo.pista_alocada].push_back(voo.id + 1); // +1 para IDs começarem em 1
+        }
+    }
+
+    // Escreve voos por pista
+    for (const auto& pista : voos_por_pista) {
+        for (int id : pista) {
+            saida << id << " ";
+        }
+        saida << endl;
+    }
+
+    saida.close();
 }

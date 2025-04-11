@@ -1,62 +1,50 @@
-#include <iostream>
-#include <vector>
 #include <algorithm>
-#include "core/airport_loader.h"
+#include <climits>
+#include "guloso.h"
 
 using namespace std;
 
-// Função de comparação para ordenar voos pelo tempo de liberação
-bool compararPorLiberacao(const Voo &a, const Voo &b) {
-    return a.horario < b.horario;
-}
+void Guloso(vector<Voo>& voos, int m, const vector<vector<int>>& tempo_espera) {
+    sort(voos.begin(), voos.end(), [](const Voo& a, const Voo& b) {
+        return a.horario_prev < b.horario_prev;
+    });
 
-void atualizarVooEPista(vector<Voo> &voos, vector<int> &pistas, 
-    const vector<vector<int>> &tempo_espera, 
-    int indice_voo, int pista_id) {// i = indice do voo
+    vector<int> disponibilidade_pistas(m, 0);
+    vector<int> ultimo_voo_pista(m, -1);
 
-    if(indice_voo <= 0 || indice_voo >= voos.size()) return;    
+    for (auto& voo : voos) {
+        int melhor_pista = -1;
+        int menor_custo = INT_MAX;
+        int melhor_tempo_inicio = 0;
 
-    int tempo = tempo_espera[voos[indice_voo-1].id][voos[indice_voo].id];
+        for (int p = 0; p < m; p++) {
 
-    // Atualiza horário real do voo
-    voos[indice_voo].horario_real = 
-    max(voos[indice_voo-1].horario_real + voos[indice_voo-1].duracao + tempo,
-        voos[indice_voo].horario_prev);
+            // Calcula o tempo de início considerando o tempo de espera
+            int tempo_inicio = max(disponibilidade_pistas[p], voo.horario_prev);
+            
+            // Se houver voo anterior na pista, adiciona tempo de espera t_ij
+            if (ultimo_voo_pista[p] != -1) {
+                int voo_anterior = ultimo_voo_pista[p];
+                tempo_inicio += tempo_espera[voo_anterior][voo.id];  // t_ij
+            }
 
-    // Calcula multa por atraso
+            int atraso = tempo_inicio - voo.horario_prev;
+            int custo = atraso * voo.penalidade;
 
-    voos[indice_voo].multa = 
-        voos[indice_voo].penalidade * 
-        max(0, voos[indice_voo].horario_real - voos[indice_voo].horario_prev);
-
-
-    // Atualiza disponibilidade da pista
-    pistas[pista_id] = voos[indice_voo].horario_real + voos[indice_voo].duracao;
-}
-
-
-// Algoritmo guloso para alocar voos nas pistas
-void alocarVoos(vector<Voo> &voos, int m) {
-    // Ordena os voos pelo tempo de liberação (horario)
-
-    //perguntar se pode usar
-    sort(voos.begin(), voos.end(), compararPorLiberacao);
-
-    // Vetor para armazenar o horario disponível em cada pista
-    vector<int> pistas(m, 0);
-
-    // Alocar voos
-    for (Voo &voo : voos) {
-        // Encontrar a primeira pista disponível
-        for (int i = 0; i < m; i++) {
-            if (pistas[i] <= voo.horario_real) { // tem que ver a pista com a menor diferenca e se o valor do horario_real é maior que o horario disponivel
-                cout << "Voo " << voo.id << " alocado na pista " << i + 1
-                     << " no tempo " << max(pistas[i], voo.horario_real) << endl;
-
-                
-                
-                break;
+            if (custo < menor_custo) {
+                menor_custo = custo;
+                melhor_pista = p;
+                melhor_tempo_inicio = tempo_inicio;
             }
         }
+
+        // Aloca o voo
+        voo.pista_alocada = melhor_pista;
+        voo.horario_real = melhor_tempo_inicio;
+        voo.voo_anterior = ultimo_voo_pista[melhor_pista];
+        
+        // Atualiza disponibilidade da pista
+        disponibilidade_pistas[melhor_pista] = voo.horario_real + voo.duracao;
+        ultimo_voo_pista[melhor_pista] = voo.id;
     }
 }

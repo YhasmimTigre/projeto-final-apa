@@ -7,17 +7,17 @@ using namespace std;
 #include <string>
 
 struct Voo {
-    int id, horario_prev, horario_real, duracao, penalidade;
+    int id, horario_prev, horario_real, duracao, penalidade, multa, pista_alocada, voo_anterior;
 };
 
 extern vector<Voo> voos;
 extern vector<vector<int>> tempo_espera;
-extern int m;
-extern int n;
+extern int n, m;
 
-void alocarVoos(vector<Voo>& voos, int m);
 bool lerDados(const string& nome_arquivo);
+void calcularMultas();
+int calcularCustoTotal();
 void exibirDados();
-
+void escreverSolucao(const string& nome_arquivo, int custo_total);
 
 #endif
