@@ -5,12 +5,12 @@
 #include <random>
 #include "../core/airport_loader.h"
 #include "guloso.h"
+#include "alocador.h"
 
 using namespace std;
 
 // MOVIMENTO 1: Trocar dois voos entre pistas diferentes
 bool vizinhanca1() {
-    int custo_original = calcularCustoTotal();
     vector<Voo> backup = voos; // Salva a solução atual
     // Percorre pares de voos
     for (int i = 0; i < n; i++) {
@@ -19,7 +19,7 @@ bool vizinhanca1() {
             if (voos[i].pista_alocada != voos[j].pista_alocada) {
                 swap(voos[i], voos[j]);
                 int novo_custo = calcularCustoTotal();
-                if (novo_custo < custo_original) {
+                if (novo_custo < custo_total) {
                     return true; // Movimento aceito
                 }
                 // Se não melhorar, restaura a solução
@@ -32,7 +32,6 @@ bool vizinhanca1() {
 
 // MOVIMENTO 2: Mover um voo de sua pista atual para outra pista
 bool vizinhanca2() {
-    int custo_original = calcularCustoTotal();
     vector<Voo> backup = voos; // Salva a solução atual
     for (int i = 0; i < n; i++) {
         int pista_atual = voos[i].pista_alocada;
@@ -43,7 +42,7 @@ bool vizinhanca2() {
             voos[i].pista_alocada = nova_pista;
             // Em uma implementação completa, aqui poderíamos ajustar também o campo 'voo_anterior' se necessário.
             int novo_custo = calcularCustoTotal();
-            if (novo_custo < custo_original) {
+            if (novo_custo < custo_total) {
                 return true;
             }
             voos = backup;
@@ -54,7 +53,6 @@ bool vizinhanca2() {
 
 // MOVIMENTO 3: Inverter a ordem de dois voos que estão na mesma pista
 bool vizinhanca3() {
-    int custo_original = calcularCustoTotal();
     vector<Voo> backup = voos; // Salva a solução atual
     for (int i = 0; i < n; i++) {
         for (int j = i + 1; j < n; j++) {
@@ -63,7 +61,7 @@ bool vizinhanca3() {
                 // Inverte a posição dos dois voos (troca todos os campos)
                 swap(voos[i], voos[j]);
                 int novo_custo = calcularCustoTotal();
-                if (novo_custo < custo_original)
+                if (novo_custo < custo_total)
                     return true;
                 voos = backup;
             }
@@ -74,7 +72,6 @@ bool vizinhanca3() {
 
 // VND principal
 void VND() {
-    int custo_atual = calcularCustoTotal();
     int k = 1;
     const int k_max = 3;
 
@@ -86,8 +83,8 @@ void VND() {
 
         if (melhorou){
             k = 1;
-            custo_atual = calcularCustoTotal();
-            cout << "Nova melhoria encontrada, custo = " << custo_atual << endl;
+            custo_total = calcularCustoTotal();
+            cout << "Nova melhoria encontrada, custo = " << custo_total << endl;
         }
         else{++k;}
 
@@ -95,7 +92,7 @@ void VND() {
 
     // Exibe a solução final
     cout << "\n--- Solucao Final ---\n";
-    cout << "Custo total (soma das multas): " << custo_atual << "\n";
+    cout << "Custo total (soma das multas): " << custo_total << "\n";
     for (int pista = 0; pista < m; pista++) {
         cout << "Pista " << pista + 1 << ": ";
         // Exibe os voos alocados nesta pista (baseado na atribuição atual)
