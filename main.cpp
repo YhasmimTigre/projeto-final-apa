@@ -19,16 +19,12 @@ int main(int argc, char* argv[]) {
     }
     clock_t end = clock();
     double elapseG = end - start;
-    //TempoMedioExecucao(elapseG);
 
     //executa o VND e calcula tempo médio de execução
     clock_t start = clock();
     VND();
     clock_t end = clock();
     double elapseVND = end - start;
-    //TempoMedioExecucao(elapseVND);
-
-    //funcao TabelaFinalResultados(); // solução final, tempo medio, gap
 
     return 0;
 }

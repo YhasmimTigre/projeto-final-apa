@@ -109,11 +109,3 @@ void escreverSolucao(const string& nome_arquivo, int custo_total) {
     saida.close();
 }
 
-//o GAP representa a diferença percentual entre a solução heurística (guloso) e a ótima (VND)
-double calcularGAP(int valorHeuristica, int valorOtimo) {
-    double gap = ( (static_cast<double>(valor) - valorOtimo) / valorOtimo ) * 100.0;
-    return gap;Heuristica
-}
-
-
-
