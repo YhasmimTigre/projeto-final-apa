@@ -6,73 +6,66 @@
 #include "../core/airport_loader.h"
 #include "guloso.h"
 
-using namespace std; // tem q declarar em todo arquivo? não basta estar em dados.h?
+using namespace std;
 
-using Solucao = vector<vector<Voo>>; // vetor de pistas onde cada pista é uma lista de voos
-
-// Gera uma solução inicial simples (PODE SER TROCADA PELO GULOSO)
-Solucao solucaoInicial(const vector<Voo>& voos, int num_pistas) {
-    Solucao pistas(num_pistas);
-    for (size_t i = 0; i < voos.size(); ++i)
-        pistas[i % num_pistas].push_back(voos[i]);
-    return pistas;
+// MOVIMENTO 1: Trocar dois voos entre pistas diferentes
+bool vizinhanca1() {
+    int custo_original = calcularCustoTotal();
+    vector<Voo> backup = voos; // Salva a solução atual
+    // Percorre pares de voos
+    for (int i = 0; i < n; i++) {
+        for (int j = i + 1; j < n; j++) {
+            // Se os voos estão em pistas diferentes, tenta trocá-los
+            if (voos[i].pista_alocada != voos[j].pista_alocada) {
+                swap(voos[i], voos[j]);
+                int novo_custo = calcularCustoTotal();
+                if (novo_custo < custo_original) {
+                    return true; // Movimento aceito
+                }
+                // Se não melhorar, restaura a solução
+                voos = backup;
+            }
+        }
+    }
+    return false; // Nenhuma melhoria encontrada nesta vizinhança
 }
 
-// Vizinhança 1: troca dois voos entre pistas diferentes, caso reduz penalidade, aceita a mudança
-bool vizinhanca1(Solucao& pistas, const vector<vector<int>>& t, int& custo) {
-    for (int i = 0; i < pistas.size(); ++i) {
-        for (int j = 0; j < pistas.size(); ++j) {
-            if (i == j) continue;
-            for (int a = 0; a < pistas[i].size(); ++a) {
-                for (int b = 0; b < pistas[j].size(); ++b) {
-                    swap(pistas[i][a], pistas[j][b]);
-                    int nova_penalidade = calcularPenalidade(pistas, t);
-                    if (nova_penalidade < custo) {
-                        custo = nova_penalidade;
-                        return true;
-                    }
-                    swap(pistas[i][a], pistas[j][b]); // desfaz
-                }
+// MOVIMENTO 2: Mover um voo de sua pista atual para outra pista
+bool vizinhanca2() {
+    int custo_original = calcularCustoTotal();
+    vector<Voo> backup = voos; // Salva a solução atual
+    for (int i = 0; i < n; i++) {
+        int pista_atual = voos[i].pista_alocada;
+        // Tenta mover o voo para cada outra pista
+        for (int nova_pista = 0; nova_pista < m; nova_pista++) {
+            if (nova_pista == pista_atual)
+                continue;
+            voos[i].pista_alocada = nova_pista;
+            // Em uma implementação completa, aqui poderíamos ajustar também o campo 'voo_anterior' se necessário.
+            int novo_custo = calcularCustoTotal();
+            if (novo_custo < custo_original) {
+                return true;
             }
+            voos = backup;
         }
     }
     return false;
 }
 
-// Vizinhança 2: mover um voo de uma pista para outra, caso reduz penalidade, aceita a mudança
-bool vizinhanca2(Solucao& pistas, const vector<vector<int>>& t, int& custo) {
-    for (int i = 0; i < pistas.size(); ++i) {
-        for (int j = 0; j < pistas.size(); ++j) {
-            if (i == j || pistas[i].empty()) continue;
-            for (int k = 0; k < pistas[i].size(); ++k) {
-                Voo temp = pistas[i][k];
-                pistas[i].erase(pistas[i].begin() + k);
-                pistas[j].push_back(temp);
-                int nova_penalidade = calcularPenalidade(pistas, t);
-                if (nova_penalidade < custo) {
-                    custo = nova_penalidade;
+// MOVIMENTO 3: Inverter a ordem de dois voos que estão na mesma pista
+bool vizinhanca3() {
+    int custo_original = calcularCustoTotal();
+    vector<Voo> backup = voos; // Salva a solução atual
+    for (int i = 0; i < n; i++) {
+        for (int j = i + 1; j < n; j++) {
+            // Verifica se ambos estão alocados na mesma pista
+            if (voos[i].pista_alocada == voos[j].pista_alocada) {
+                // Inverte a posição dos dois voos (troca todos os campos)
+                swap(voos[i], voos[j]);
+                int novo_custo = calcularCustoTotal();
+                if (novo_custo < custo_original)
                     return true;
-                }
-                pistas[j].pop_back();
-                pistas[i].insert(pistas[i].begin() + k, temp);
-            }
-        }
-    }
-    return false;
-}
-
-// Vizinhança 3: inverter dois voos dentro da mesma pista, caso reduz penalidade, aceita a mudança
-bool vizinhanca3(Solucao& pistas, const vector<vector<int>>& t, int& custo) {
-    for (auto& pista : pistas) {
-        for (int i = 0; i < pista.size(); ++i) {
-            for (int j = i + 1; j < pista.size(); ++j) {
-                swap(pista[i], pista[j]);
-                int nova_penalidade = calcularPenalidade(pistas, t);
-                if (nova_penalidade < custo) {
-                    custo = nova_penalidade;
-                    return true;
-                }
-                swap(pista[i], pista[j]);
+                voos = backup;
             }
         }
     }
@@ -80,30 +73,37 @@ bool vizinhanca3(Solucao& pistas, const vector<vector<int>>& t, int& custo) {
 }
 
 // VND principal
-void VND(vector<Voo>& voos, const vector<vector<int>>& t, int num_pistas) {
-    Solucao pistas = solucaoInicial(voos, num_pistas);
-    int custo = calcularPenalidade(pistas, t);
-
+void VND() {
+    int custo_atual = calcularCustoTotal();
     int k = 1;
-    const int k_max = 2;
+    const int k_max = 3;
 
     while (k <= k_max) {
         bool melhorou = false;
-        if (k == 1) melhorou = vizinhanca1(pistas, t, custo);
-        else if (k == 2) melhorou = vizinhanca2(pistas, t, custo);
-        else if (k == 3) melhorou = vizinhanca3(pistas, t, custo);
+        if (k == 1) melhorou = vizinhanca1();
+        else if (k == 2) melhorou = vizinhanca2();
+        else if (k == 3) melhorou = vizinhanca3();
 
-        if (melhorou)
+        if (melhorou){
             k = 1;
-        else
-            ++k;
+            custo_atual = calcularCustoTotal();
+            cout << "Nova melhoria encontrada, custo = " << custo_atual << endl;
+        }
+        else{++k;}
+            
     }
 
-    cout << "Melhor penalidade encontrada: " << custo << endl;
-    for (int i = 0; i < pistas.size(); ++i) {
-        cout << "Pista " << i + 1 << ": ";
-        for (auto& v : pistas[i])
-            cout << "V" << v.id + 1 << " ";
-        cout << endl;
+    // Exibe a solução final
+    cout << "\n--- Solução Final ---\n";
+    cout << "Custo total (soma das multas): " << custo_atual << "\n";
+    for (int pista = 0; pista < m; pista++) {
+        cout << "Pista " << pista + 1 << ": ";
+        // Exibe os voos alocados nesta pista (baseado na atribuição atual)
+        for (int i = 0; i < n; i++) {
+            if (voos[i].pista_alocada == pista) {
+                cout << "V" << voos[i].id + 1 << " ";
+            }
+        }
+        cout << "\n";
     }
 }

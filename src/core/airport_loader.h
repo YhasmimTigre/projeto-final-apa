@@ -1,4 +1,4 @@
-#ifndef AIRPORT_LOADER_H
+#ifndef AIRPORT_LOADER_H 
 #define AIRPORT_LOADER_H
 
 using namespace std;
@@ -12,7 +12,7 @@ struct Voo {
 
 extern vector<Voo> voos;
 extern vector<vector<int>> tempo_espera;
-extern int n, m;
+extern int n, m; //num de voos e num de pistas
 
 bool lerDados(const string& nome_arquivo);
 void calcularMultas();
