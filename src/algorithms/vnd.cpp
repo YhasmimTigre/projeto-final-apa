@@ -90,11 +90,11 @@ void VND() {
             cout << "Nova melhoria encontrada, custo = " << custo_atual << endl;
         }
         else{++k;}
-            
+
     }
 
     // Exibe a solução final
-    cout << "\n--- Solução Final ---\n";
+    cout << "\n--- Solucao Final ---\n";
     cout << "Custo total (soma das multas): " << custo_atual << "\n";
     for (int pista = 0; pista < m; pista++) {
         cout << "Pista " << pista + 1 << ": ";

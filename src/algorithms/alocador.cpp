@@ -5,10 +5,12 @@
 
 using namespace std;
 
+int custo_total = 0;
+
 void mostrarSolucaoNoTerminal(int custo_total) {
     cout << "Custo total: " << custo_total << endl;
-    cout << "\nAlocacao de voos por pista:\n";
-    
+    cout << "Alocacao de voos por pista:" << endl;
+
     // Agrupa voos por pista
     vector<vector<int>> voos_por_pista(m);
     for (const auto& voo : voos) {
@@ -33,10 +35,9 @@ bool executarAlocacao(const string& arquivo_entrada) {
         return false;
     }
 
-    Guloso(voos, m, tempo_espera);
+    Guloso();
     calcularMultas();
-    int custo_total = calcularCustoTotal();
-
+    custo_total = calcularCustoTotal();
     mostrarSolucaoNoTerminal(custo_total);
     return true;
 }

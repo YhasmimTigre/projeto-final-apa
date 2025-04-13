@@ -14,10 +14,10 @@ extern vector<Voo> voos;
 extern vector<vector<int>> tempo_espera;
 extern int n, m; //num de voos e num de pistas
 
-bool lerDados(const string& nome_arquivo);
+bool lerDados(const string& arquivo);
 void calcularMultas();
 int calcularCustoTotal();
 void exibirDados();
-void escreverSolucao(const string& nome_arquivo, int custo_total);
+void escreverSolucao(const string& arquivo, int custo_total);
 
 #endif
