@@ -11,57 +11,64 @@ using namespace std;
 
 // Variável para controlar o custo mínimo encontrado
 int custo_minimo_global;
+int novo_custo;
 
-void recalcularSolucao() { //nao ta considerando a matriz t
-    // Agrupa voos por pista
-    vector<vector<Voo*>> voos_por_pista(m);
-    for (auto& voo : voos) {
-        voos_por_pista[voo.pista_alocada].push_back(&voo);
-    }
+int recalcularPista(int pista) { 
+    int custo_pista = 0;
+    int ultimo_tempo = 0;
+    int ultimo_voo = -1;
 
-    // Para cada pista, ordena voos por horário atual e recalcula
-    for (auto& pista : voos_por_pista) {
-        sort(pista.begin(), pista.end(), [](Voo* a, Voo* b) {
-            return a->horario_real < b->horario_real;
-        });
-
-        int ultimo_horario = 0;
-        int ultimo_voo = -1;
-
-        for (auto voo : pista) {
-            // Calcula novo horário considerando restrições
-            int tempo_inicio = max(voo->horario_prev, ultimo_horario);
-
-            if (ultimo_voo != -1) {
-                tempo_inicio += tempo_espera[ultimo_voo][voo->id];
-            }
-
-            voo->horario_real = tempo_inicio;
-            voo->voo_anterior = ultimo_voo;
-
-            ultimo_horario = tempo_inicio + voo->duracao;
-            ultimo_voo = voo->id;
+    vector<Voo*> voos_pista;
+    for (auto& voo: voos){
+        if (voo.pista_alocada == pista) {
+            voos_pista.push_back(&voo);
         }
-    }
+    }    
 
-    calcularMultas();
+    // Calcula custo da pista
+    for (auto& voo_ptr: voos_pista){
+        Voo& voo = *voo_ptr;
+        int tempo_inicio;
+
+        if (ultimo_voo != -1){
+            tempo_inicio = ultimo_tempo + horario_prev;
+        } else {
+            tempo_inicio = voo.horario_prev
+        }
+
+        // Atualiza Voo
+        voo.horario_real = tempo_inicio;
+        voo.voo_anterior = ultimo_voo;
+        voo.atraso = tempo_inicio - voo.horario_prev;
+        voo.multa = voo.atraso * voo.penalidade;
+        custo_pista += voo.multa;
+    }
+    return custo_pista;
+
 }
 
 // MOVIMENTO 1: Trocar dois voos entre pistas diferentes
 bool vizinhanca1() {
     bool melhorou = false;
     vector<Voo> voos_backup = voos;
+    int custo_backup = novo_custo; // salva o custo atual antes da troca
 
     for (int i = 0; i < n; i++) {
         for (int j = i + 1; j < n; j++) {
             if (voos[i].pista_alocada == voos[j].pista_alocada) continue;
 
+            int pista_original_i = voos[i].pista_alocada;
+            int pista_original_j = voos[j].pista_alocada;
+            
+            // Remove os custos antes da troca
+            novo_custo -= recalcularPista(pista_original_i);
+            novo_custo -= recalcularPista(pista_original_j);
             // Faz a troca
             swap(voos[i].pista_alocada, voos[j].pista_alocada);
 
             // Recalcula toda a solução
-            recalcularSolucao();
-            int novo_custo = calcularCustoTotal();
+            novo_custo += recalcularPista(pista_original_i);
+            novo_custo += recalcularPista(pista_original_j);
 
             if (novo_custo < custo_minimo_global) {
                 custo_minimo_global = novo_custo;
@@ -70,6 +77,7 @@ bool vizinhanca1() {
                 break; // Sai do loop interno
             } else {
                 voos = voos_backup; // Restaura a solução anterior
+                novo_custo = custo_backup; // Restaura o custo anterior
             }
         }
         if (melhorou) break; // Sai do loop externo se encontrou melhoria
@@ -90,7 +98,7 @@ bool vizinhanca2() {
             if (nova_pista == pista_original) continue;
 
             voos[i].pista_alocada = nova_pista;
-            recalcularSolucao();
+            recalcularApenasPistas();
             int novo_custo = calcularCustoTotal();
 
             if (novo_custo < custo_minimo_global) {
@@ -125,7 +133,7 @@ bool vizinhanca3() {
             swap(voos[voos_por_pista[p][i]], voos[voos_por_pista[p][i+1]]);
 
             // Recalcula a solução
-            recalcularSolucao();
+            recalcularApenasPistas();
             int novo_custo = calcularCustoTotal();
 
             if (novo_custo < custo_minimo_global) {
@@ -176,12 +184,12 @@ void VND() {
 
     } while (melhoria_global);
 
-    // Atualiza o custo_total global com o melhor encontrado
-    custo_total = custo_minimo_global;
+    // Atualiza o novo_custo global com o melhor encontrado
+    novo_custo = custo_minimo_global;
 
     // Exibe solução final
     cout << "\n--- Solucao Final VND ---\n";
-    cout << "Custo total: " << custo_total << "\n";
+    cout << "Custo total: " << novo_custo << "\n";
     cout << "Iteracoes realizadas: " << iteracoes << "\n";
 
     vector<vector<int>> voos_por_pista(m);
