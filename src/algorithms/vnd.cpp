@@ -73,7 +73,6 @@ bool vizinhanca1() {
             if (novo_custo < custo_minimo_global) {
                 custo_minimo_global = novo_custo;
                 melhorou = true;
-                voos_backup = voos; // Atualiza o backup com a melhor solução
                 break; // Sai do loop interno
             } else {
                 voos = voos_backup; // Restaura a solução anterior
@@ -90,16 +89,22 @@ bool vizinhanca1() {
 bool vizinhanca2() {
     bool melhorou = false;
     vector<Voo> voos_backup = voos;
+    int custo_backup = novo_custo;
 
     for (int i = 0; i < n; i++) {
         int pista_original = voos[i].pista_alocada;
-
+        
         for (int nova_pista = 0; nova_pista < m; nova_pista++) {
             if (nova_pista == pista_original) continue;
 
+            // Remove os custos antes da troca
+            novo_custo -= recalcularPista(pista_original_i);
+            novo_custo -= recalcularPista(pista_original_j);
+
             voos[i].pista_alocada = nova_pista;
-            recalcularApenasPistas();
-            int novo_custo = calcularCustoTotal();
+            
+            novo_custo += recalcularPista(pista_original_i);
+            novo_custo += recalcularPista(pista_original_j);
 
             if (novo_custo < custo_minimo_global) {
                 custo_minimo_global = novo_custo;
@@ -108,6 +113,7 @@ bool vizinhanca2() {
                 break; // Sai do loop de pistas
             } else {
                 voos = voos_backup; // Restaura a solução
+                novo_custo = custo_backup; // Restaura o custo anterior
             }
         }
         if (melhorou) break; // Sai do loop de voos se encontrou melhoria
@@ -120,6 +126,7 @@ bool vizinhanca2() {
 bool vizinhanca3() {
     bool melhorou = false;
     vector<Voo> voos_backup = voos;
+    int custo_backup = novo_custo;
 
     // Agrupa voos por pista mantendo a ordem atual
     vector<vector<int>> voos_por_pista(m);
@@ -148,6 +155,133 @@ bool vizinhanca3() {
         if (melhorou) break; // Sai do loop de pistas se encontrou melhoria
     }
 
+    return melhorou;
+}
+
+// MOVIMENTO 4: Realocar posição de um voo dentro da mesma pista
+bool vizinhanca4() {
+    bool melhorou = false;
+    vector<Voo> voos_backup = voos;
+    int custo_backup = novo_custo;
+
+    // Agrupa voos por pista mantendo a ordem atual
+    vector<vector<int>> voos_por_pista(m);
+    for (int i = 0; i < n; i++) {
+        voos_por_pista[voos[i].pista_alocada].push_back(i);
+    }
+
+    for (int p = 0; p < m; p++) {
+        if (voos_por_pista[p].size() < 3) continue; // Precisa de pelo menos 3 voos para realocar
+
+        for (size_t pos_atual = 0; pos_atual < voos_por_pista[p].size(); pos_atual++) {
+            int voo_id = voos_por_pista[p][pos_atual];
+            
+            // Tenta reposicionar para todas as outras posições na mesma pista
+            for (size_t nova_pos = 0; nova_pos < voos_por_pista[p].size(); nova_pos++) {
+                if (nova_pos == pos_atual) continue;
+                
+                novo_custo -= recalcularPista(p);
+                
+                // Remove o voo da posição atual
+                voos_por_pista[p].erase(voos_por_pista[p].begin() + pos_atual);
+                
+                // Insere na nova posição
+                voos_por_pista[p].insert(voos_por_pista[p].begin() + nova_pos, voo_id);
+                
+                // Reordena os voos na estrutura principal de acordo com a nova ordem
+                for (int i = 0; i < voos.size(); i++) {
+                    if (voos[i].pista_alocada == p) {
+                        voos[i].pista_alocada = -1; // Marca temporariamente
+                    }
+                }
+                
+                for (size_t i = 0; i < voos_por_pista[p].size(); i++) {
+                    voos[voos_por_pista[p][i]].pista_alocada = p;
+                }
+                
+                novo_custo += recalcularPista(p);
+                
+                if (novo_custo < custo_minimo_global) {
+                    custo_minimo_global = novo_custo;
+                    melhorou = true;
+                    voos_backup = voos;
+                    break;
+                } else {
+                    voos = voos_backup;
+                    novo_custo = custo_backup;
+                    voos_por_pista[p].clear();
+                    for (int i = 0; i < n; i++) {
+                        if (voos[i].pista_alocada == p) {
+                            voos_por_pista[p].push_back(i);
+                        }
+                    }
+                }
+            }
+            if (melhorou) break;
+        }
+        if (melhorou) break;
+    }
+    
+    return melhorou;
+}
+
+// MOVIMENTO 5: Trocar dois pares de voos consecutivos entre pistas diferentes
+bool vizinhanca5() {
+    bool melhorou = false;
+    vector<Voo> voos_backup = voos;
+    int custo_backup = novo_custo;
+
+    // Agrupa voos por pista mantendo a ordem atual
+    vector<vector<int>> voos_por_pista(m);
+    for (int i = 0; i < n; i++) {
+        voos_por_pista[voos[i].pista_alocada].push_back(i);
+    }
+
+    for (int p1 = 0; p1 < m; p1++) {
+        if (voos_por_pista[p1].size() < 2) continue; // Precisa de pelo menos 2 voos
+        
+        for (int p2 = p1 + 1; p2 < m; p2++) {
+            if (voos_por_pista[p2].size() < 2) continue; // Precisa de pelo menos 2 voos
+            
+            for (size_t i = 0; i < voos_por_pista[p1].size() - 1; i++) {
+                int voo1_p1 = voos_por_pista[p1][i];
+                int voo2_p1 = voos_por_pista[p1][i + 1];
+                
+                for (size_t j = 0; j < voos_por_pista[p2].size() - 1; j++) {
+                    int voo1_p2 = voos_por_pista[p2][j];
+                    int voo2_p2 = voos_por_pista[p2][j + 1];
+                    
+                    // Remove os custos das pistas afetadas
+                    novo_custo -= recalcularPista(p1);
+                    novo_custo -= recalcularPista(p2);
+                    
+                    // Troca os pares de voos entre as pistas
+                    voos[voo1_p1].pista_alocada = p2;
+                    voos[voo2_p1].pista_alocada = p2;
+                    voos[voo1_p2].pista_alocada = p1;
+                    voos[voo2_p2].pista_alocada = p1;
+                    
+                    // Recalcula os custos
+                    novo_custo += recalcularPista(p1);
+                    novo_custo += recalcularPista(p2);
+                    
+                    if (novo_custo < custo_minimo_global) {
+                        custo_minimo_global = novo_custo;
+                        melhorou = true;
+                        voos_backup = voos;
+                        break;
+                    } else {
+                        voos = voos_backup;
+                        novo_custo = custo_backup;
+                    }
+                }
+                if (melhorou) break;
+            }
+            if (melhorou) break;
+        }
+        if (melhorou) break;
+    }
+    
     return melhorou;
 }
 
