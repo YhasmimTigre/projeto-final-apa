@@ -12,7 +12,7 @@ using namespace std;
 // Variável para controlar o custo mínimo encontrado
 int custo_minimo_global;
 
-void recalcularSolucao() {
+void recalcularSolucao() { //nao ta considerando a matriz t
     // Agrupa voos por pista
     vector<vector<Voo*>> voos_por_pista(m);
     for (auto& voo : voos) {
