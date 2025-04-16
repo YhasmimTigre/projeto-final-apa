@@ -89,30 +89,32 @@ bool vizinhanca1() {
 bool vizinhanca2() {
     bool melhorou = false;
     vector<Voo> voos_backup = voos;
-    int custo_backup = novo_custo;
+    int custo_backup = novo_custo; // salva o custo atual antes da troca
 
     for (int i = 0; i < n; i++) {
         int pista_original = voos[i].pista_alocada;
-        
+
         for (int nova_pista = 0; nova_pista < m; nova_pista++) {
             if (nova_pista == pista_original) continue;
 
-            // Remove os custos antes da troca
-            novo_custo -= recalcularPista(pista_original_i);
-            novo_custo -= recalcularPista(pista_original_j);
-
+            // Remove os custos antes da movimentação
+            novo_custo -= recalcularPista(pista_original);
+            novo_custo -= recalcularPista(nova_pista);
+            
+            // Faz a movimentação
             voos[i].pista_alocada = nova_pista;
             
-            novo_custo += recalcularPista(pista_original_i);
-            novo_custo += recalcularPista(pista_original_j);
+            // Recalcula as pistas afetadas
+            novo_custo += recalcularPista(pista_original);
+            novo_custo += recalcularPista(nova_pista);
 
             if (novo_custo < custo_minimo_global) {
                 custo_minimo_global = novo_custo;
                 melhorou = true;
-                voos_backup = voos; // Atualiza o backup
+                voos_backup = voos; // Atualiza o backup com a melhor solução
                 break; // Sai do loop de pistas
             } else {
-                voos = voos_backup; // Restaura a solução
+                voos = voos_backup; // Restaura a solução anterior
                 novo_custo = custo_backup; // Restaura o custo anterior
             }
         }
@@ -126,7 +128,7 @@ bool vizinhanca2() {
 bool vizinhanca3() {
     bool melhorou = false;
     vector<Voo> voos_backup = voos;
-    int custo_backup = novo_custo;
+    int custo_backup = novo_custo; // salva o custo atual antes da inversão
 
     // Agrupa voos por pista mantendo a ordem atual
     vector<vector<int>> voos_por_pista(m);
@@ -136,12 +138,26 @@ bool vizinhanca3() {
 
     for (int p = 0; p < m; p++) {
         for (size_t i = 0; i + 1 < voos_por_pista[p].size(); i++) {
-            // Inverte a ordem na pista
-            swap(voos[voos_por_pista[p][i]], voos[voos_por_pista[p][i+1]]);
-
-            // Recalcula a solução
-            recalcularApenasPistas();
-            int novo_custo = calcularCustoTotal();
+            int id1 = voos_por_pista[p][i];
+            int id2 = voos_por_pista[p][i+1];
+            
+            // Remove o custo da pista antes da inversão
+            novo_custo -= recalcularPista(p);
+            
+            // Inverte a ordem dos voos na mesma pista
+            // Aqui precisamos modificar os índices na estrutura voos em vez de
+            // simplesmente fazer swap, já que cada voo tem sua própria pista_alocada
+            int pista_temp = voos[id1].pista_alocada;
+            voos[id1].pista_alocada = -1; // Marca temporariamente para evitar confusão
+            voos[id2].pista_alocada = -1;
+            voos[id1].pista_alocada = pista_temp;
+            voos[id2].pista_alocada = pista_temp;
+            
+            // Atualiza a ordem na lista voos_por_pista
+            swap(voos_por_pista[p][i], voos_por_pista[p][i+1]);
+            
+            // Recalcula a pista afetada
+            novo_custo += recalcularPista(p);
 
             if (novo_custo < custo_minimo_global) {
                 custo_minimo_global = novo_custo;
@@ -150,6 +166,7 @@ bool vizinhanca3() {
                 break; // Sai do loop de inversões
             } else {
                 voos = voos_backup; // Restaura a solução
+                novo_custo = custo_backup; // Restaura o custo anterior
             }
         }
         if (melhorou) break; // Sai do loop de pistas se encontrou melhoria
