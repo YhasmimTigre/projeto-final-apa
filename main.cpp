@@ -11,6 +11,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    vizinhanca1();
     //VND();
 
 

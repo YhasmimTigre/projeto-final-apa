@@ -5,6 +5,7 @@
 #include "guloso.h"
 
 using namespace std;
+int tempo_inicio;
 
 void Guloso() {
 
@@ -23,44 +24,41 @@ void Guloso() {
         int menor_custo = INT_MAX;
         int melhor_tempo_inicio = 0;
 
-        cout << "Voo id: " << voo.id << endl;
+        /*cout << "Voo id: " << voo.id << endl;*/
 
         for (int p = 0; p < m; p++) {
-            cout<< "Visitando pista: " << p << endl;
-
-            // Calcula o tempo de início considerando o tempo de espera
-            int tempo_inicio = max(disponibilidade_pistas[p], voo.horario_prev);
-
-            cout << "tempo inicio: " << tempo_inicio << endl;
+            /*cout<< "Visitando pista: " << p << endl;*/
 
             // Se houver voo anterior na pista, adiciona tempo de espera t_ij
             if (!pistas[p].empty()) {
                 int voo_anterior = pistas[p].back();
-                tempo_inicio = disponibilidade_pistas[p] + tempo_espera[voo_anterior][voo.id];  // t_ij
+                tempo_inicio = max(disponibilidade_pistas[p]+ tempo_espera[voo_anterior][voo.id], voo.horario_prev);
 
-                cout << "voo anterior: " << voo_anterior << endl;
+                /*cout << "voo anterior: " << voo_anterior << endl;
                 cout << "voo atual: " << voo.id << endl;
                 cout << "tempo de espera: " << tempo_espera[voo_anterior][voo.id] << endl;
                 cout << "vai iniciar em: " << tempo_inicio << endl;
-                cout << "horario previsto era: " << voo.horario_prev << endl;
+                cout << "horario previsto era: " << voo.horario_prev << endl;*/
+            } else {
+
+                tempo_inicio = max(disponibilidade_pistas[p], voo.horario_prev);
+
+                /*cout << "tempo inicio: " << tempo_inicio << endl;*/
             }
 
             int atraso = tempo_inicio - voo.horario_prev;
             int custo = atraso * voo.penalidade;
 
-            cout << "atraso: " << atraso;
-            
-            cout << " custo: " << custo << endl ; 
+            /*cout << "atraso: " << atraso;
+            cout << " custo: " << custo << endl;*/ 
 
             if (custo < menor_custo) {
                 menor_custo = custo;
                 melhor_pista = p;
                 melhor_tempo_inicio = tempo_inicio;
             }
-            cout << " menor custo: " << menor_custo << endl << endl;
-        }
-
-        
+            /*cout << " menor custo: " << menor_custo << endl << endl;*/
+        }     
 
         // Aloca o voo
         voo.pista_alocada = melhor_pista;
