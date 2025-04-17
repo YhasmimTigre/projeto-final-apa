@@ -13,7 +13,8 @@ void Guloso() {
     });
 
     vector<int> disponibilidade_pistas(m, 0);
-    vector<int> ultimo_voo_pista(m, -1);
+    pistas.clear();
+    pistas.resize(m);
 
     /*cout << "quantidade pistas: " << disponibilidade_pistas.size() << endl;*/
 
@@ -33,8 +34,8 @@ void Guloso() {
             cout << "tempo inicio: " << tempo_inicio << endl;
 
             // Se houver voo anterior na pista, adiciona tempo de espera t_ij
-            if (ultimo_voo_pista[p] != -1) {
-                int voo_anterior = ultimo_voo_pista[p];
+            if (!pistas[p].empty()) {
+                int voo_anterior = pistas[p].back();
                 tempo_inicio = disponibilidade_pistas[p] + tempo_espera[voo_anterior][voo.id];  // t_ij
 
                 cout << "voo anterior: " << voo_anterior << endl;
@@ -64,14 +65,15 @@ void Guloso() {
         // Aloca o voo
         voo.pista_alocada = melhor_pista;
         voo.horario_real = melhor_tempo_inicio;
-        voo.voo_anterior = ultimo_voo_pista[melhor_pista];
+        voo.voo_anterior = pistas[melhor_pista].empty() ? -1 : pistas[melhor_pista].back();
 
         // Atualiza disponibilidade da pista
         disponibilidade_pistas[melhor_pista] = voo.horario_real + voo.duracao;
-        ultimo_voo_pista[melhor_pista] = voo.id;
+        pistas[melhor_pista].push_back(voo.id);
 
-        cout << "id: " << voo.id << " horario_real: " << voo.horario_real << " horario_previsto: " << voo.horario_prev
+        /*cout << "id: " << voo.id << " horario_real: " << voo.horario_real << " horario_previsto: " << voo.horario_prev
              << " duracao: " << voo.duracao << " penalidade: " << voo.penalidade << " multa: " << voo.multa
-             << " pista: " << voo.pista_alocada << " voo que veio antes: " << voo.voo_anterior << endl;
+             << " pista: " << voo.pista_alocada << " voo que veio antes: " << voo.voo_anterior << endl;*/
     }
+
 }

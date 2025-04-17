@@ -4,9 +4,10 @@
 
 using namespace std;
 
-vector<Voo> voos;
-vector<vector<int>> tempo_espera;
-int n, m =0;
+std::vector<Voo> voos;
+std::vector<std::vector<int>> pistas;
+std::vector<std::vector<int>> tempo_espera;
+int n, m=0;
 
 bool lerDados(const string& nome_arquivo) {
     ifstream MyReadFile(nome_arquivo);

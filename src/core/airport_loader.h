@@ -11,8 +11,8 @@ struct Voo {
 };
 
 extern std::vector<Voo> voos;
-extern std::vector<vector<int>> pistas;
-extern std::vector<vector<int>> tempo_espera;
+extern std::vector<std::vector<int>> pistas;
+extern std::vector<std::vector<int>> tempo_espera;
 extern int n, m; //num de voos e num de pistas
 
 bool lerDados(const std::string& arquivo);
