@@ -198,44 +198,39 @@ bool Airport::inverterVoosConsecutivos(int pista, int posicao_voo) { // Mov. Swa
     return true;
 }
 
-bool Airport::insertIntraPista(int pista, int i, int j){
-    if (pista < 0 || pista >= num_pistas || i < 0 || j < 0 || i >= static_cast<int>(pistas[pista].size()) || j >= static_cast<int>(pistas[pista].size())) {
-        cerr << "Invalido: pista=" << pista << ", i=" << i << ", j=" << j << endl;
+
+bool Airport::insertIntraPista(int pista, int origem, int destino){
+
+    //verificação de movimentos invalidos ou irrelevantes
+    if (pista < 0 || pista >= num_pistas ||
+        origem < 0 || destino < 0 ||
+        origem >= static_cast<int>(pistas[pista].size()) ||
+        destino > static_cast<int>(pistas[pista].size()) ||
+        origem == destino || abs(origem - destino) == 1) {
+
+        cerr << "Invalido: pista = " << pista << ", origem = " << origem << ", destino = " << destino << endl;
         return false;
     }
 
-    if (i == j) return false; // Não faz sentido mover para a mesma posição
-    //if (i > j) j--; // Garante que i < j
+    const int id_voo = pistas[pista][origem];
+    Voo& voo = voos[id_voo];
 
-    int id_voo = pistas[pista][i];
+    if (destino > origem) destino--;
+    pistas[pista].erase(pistas[pista].begin() + origem); // Remove o voo da posição origem
+    pistas[pista].insert(pistas[pista].begin() + destino, id_voo); // Insere na posição destino
 
-    pistas[pista].erase(pistas[pista].begin() + i); // Remove o voo da posição i
-    pistas[pista].insert(pistas[pista].begin() + j, id_voo); // Insere na posição j
-    // Atualiza o voo
-    voos[id_voo].pista_alocada = pista;
-    voos[id_voo].horario_real = 0; // Resetando o horário real
-    for (int k = 0; k < pistas[pista].size(); ++k) {
-        int id = pistas[pista][k];
-        if (k == 0) {
-            voos[id].horario_real = max(voos[id].horario_prev, 0);
-        } else {
-            int tempo_min = voos[pistas[pista][k-1]].horario_real + voos[pistas[pista][k-1]].duracao + tempo_espera[pistas[pista][k-1]][id];
-            voos[id].horario_real = max(tempo_min, voos[id].horario_prev);
-        }
+    // Atualiza os voos e horarios
+    int horario_anterior = (destino > 0) ? voos[pistas[pista][destino-1]].horario_real : 0;
+    for (int k = (destino > 0) ? destino - 1 : 0; k < pistas[pista].size(); ++k) {
+        Voo& v = voos[pistas[pista][k]];
+        v.horario_real = max(horario_anterior + ((k > 0) ? 
+                            (voos[pistas[pista][k-1]].duracao + tempo_espera[pistas[pista][k-1]][v.id]) : 0),
+                            v.horario_prev);
+        horario_anterior = v.horario_real;
     }
-    // Atualiza o voo anterior
-    if (i > 0) {
-        voos[id_voo].voo_anterior = pistas[pista][i - 1];
-    } else {
-        voos[id_voo].voo_anterior = -1;
-    }
-    if (j < static_cast<int>(pistas[pista].size()) - 1) {
-        voos[id_voo].voo_anterior = pistas[pista][j + 1];
-    } else {
-        voos[id_voo].voo_anterior = -1;
-    }
+
     // Debug: mostra voos após inserção
-    cout << "=== APOS INSERCAO ===" << endl;
+    cout << "\n=== APOS INSERCAO ===" << endl;
     cout << "Voo " << id_voo << ": HR=" << voos[id_voo].horario_real 
          << ", Ant=" << voos[id_voo].voo_anterior << endl;
     cout << "Ordem na pista: ";
@@ -247,10 +242,43 @@ bool Airport::insertIntraPista(int pista, int i, int j){
 }
 
 bool Airport::opt2IntraPista(int pista, int i, int j, int max_gap) {
-    if (j - i < 1 || j - i > max_gap) return false; 
 
-    reverse(pistas[pista].begin() + i, pistas[pista].begin() + j + 1);
-    calcularMultas();  
+    // Verificação completa
+    if (pista < 0 || pista >= num_pistas || i < 0 || j <= i ||
+        j >= static_cast<int>(pistas[pista].size()) || (j - i) > max_gap) {
+        return false;
+    }
+
+    // Cria cópia para avaliação
+    vector<int> nova_pista = pistas[pista];
+    std::reverse(nova_pista.begin() + i, nova_pista.begin() + j + 1);
+
+    // Avalia viabilidade antes de aplicar
+    int horario_atual = (i > 0) ? voos[nova_pista[i-1]].horario_real : 0;
+    for (int k = i; k <= j; ++k) {
+        const Voo& v = voos[nova_pista[k]];
+        int tempo_min = horario_atual + ((k > 0) ? 
+                       (voos[nova_pista[k-1]].duracao + tempo_espera[nova_pista[k-1]][v.id]) : 0);
+        
+        if (tempo_min > v.horario_prev) {
+            return false;
+        }
+        horario_atual = max(tempo_min, v.horario_prev);
+    }
+
+    // Aplica a mudança se for viável
+    pistas[pista] = nova_pista;
+    
+    // Atualiza apenas os horários afetados
+    int horario = (i > 0) ? voos[pistas[pista][i-1]].horario_real : 0;
+    for (int k = i; k <= j; ++k) {
+        Voo& v = voos[pistas[pista][k]];
+        v.horario_real = max(horario + ((k > 0) ? 
+                           (voos[pistas[pista][k-1]].duracao + tempo_espera[pistas[pista][k-1]][v.id]) : 0),
+                           v.horario_prev);
+        horario = v.horario_real;
+    }
+
+    calcularMultas();
     return true;
-
 }
