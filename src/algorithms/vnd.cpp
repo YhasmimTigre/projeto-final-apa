@@ -13,6 +13,7 @@ static bool testarMelhoria(Airport* airport, int custo_atual, const string& mens
     if (novo_custo < custo_atual) {
     
         cout << " \033[1;32m(MELHOR!)\033[0m\n";
+        airport->custo_melhor = novo_custo;
         return true;
     
     } else {
@@ -136,7 +137,8 @@ void VND(Airport* airport) {
         bool melhorou = vizinhancas[k](airport);
 
         if (melhorou) {
-            cout << "Melhoria encontrada! Voltando para vizinhanca 1.\n\n";
+            cout << "Melhoria encontrada! Voltando para vizinhanca " << vizinhancas[k-1] << ".\n\n";
+
             k = 0;  
         } else {
             k++;   
@@ -144,5 +146,5 @@ void VND(Airport* airport) {
     }
 
     cout << "--- FIM DO VND ---\n";
-    cout << "Melhor custo final: " << airport->custo_total << endl;
+    cout << "Melhor custo final: " << airport->custo_melhor << endl;
 }

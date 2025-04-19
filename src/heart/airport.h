@@ -22,6 +22,7 @@ class Airport {
    		std::vector<std::vector<int>> tempo_espera;
 		int num_voos, num_pistas; //n e m
 		int custo_total = 0;
+		int custo_melhor = 0;
 
 		bool executarAlocacao(const std::string& arquivo_entrada);
 		void mostrarSolucaoNoTerminal(int custo_total);
