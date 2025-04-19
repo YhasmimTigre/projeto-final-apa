@@ -1,13 +1,18 @@
 #include <algorithm>
 #include <iostream>
 #include <climits>
-#include "../core/airport_loader.h"
+#include "../heart/airport.h"
 #include "guloso.h"
 
 using namespace std;
-int tempo_inicio;
 
-void Guloso() {
+void Guloso(Airport* airport) {
+
+    //dados necessarios
+    auto& voos = airport->voos;
+    auto& pistas = airport->pistas;
+    auto& tempo_espera = airport->tempo_espera;
+    int m = airport->num_pistas;
 
     sort(voos.begin(), voos.end(), [](const Voo& a, const Voo& b) {
         return a.horario_prev < b.horario_prev;
@@ -27,6 +32,9 @@ void Guloso() {
         /*cout << "Voo id: " << voo.id << endl;*/
 
         for (int p = 0; p < m; p++) {
+
+            int tempo_inicio;
+            
             /*cout<< "Visitando pista: " << p << endl;*/
 
             // Se houver voo anterior na pista, adiciona tempo de espera t_ij

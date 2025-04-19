@@ -1,17 +1,20 @@
-CXX = g++
+CXX := g++
 
-CXXFLAGS = -std=c++11 -Wall
+CXXFLAGS := -std=c++11 -Wall -Iinclude
 
-TARGET = main
+TARGET := main
 
-SRCS = main.cpp src/core/airport_loader.cpp src/algorithms/guloso.cpp
+SRCS := main.cpp src/heart/airport.cpp src/algorithms/guloso.cpp src/algorithms/vnd.cpp
 
-OBJS = $(SRCS:.cpp=.o)
+OBJS := $(SRCS:.cpp=.o)
 
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
-    $(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJS)
+    $(CXX) $(CXXFLAGS) -o $@ $(OBJS)
+
+%.o: %.cpp
+$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
     rm -f $(OBJS) $(TARGET)

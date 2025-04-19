@@ -1,6 +1,8 @@
 #ifndef GULOSO_H
 #define GULOSO_H
 
-void Guloso();
+class Airport;
+
+void Guloso(Airport* airport);
 
 #endif

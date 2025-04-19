@@ -1,18 +1,23 @@
 #include <iostream>
 #include <ctime> 
-#include "src/algorithms/alocador.h"
+#include "src/heart/airport.h"
 #include "src/algorithms/vnd.h"
+#include "src/algorithms/guloso.h"
 
 using namespace std;
 
 int main(int argc, char* argv[]) {
 
-    if (!executarAlocacao(argv[1])) {
+    Airport airport;
+
+    if (!airport.executarAlocacao(argv[1])) {
+        
+        cerr << "Falha na alocação inicial" << endl;
         return 1;
+    
     }
 
-    VND();
-    //VND();
+    VND(&airport);
 
 
     //PARTE DO CLOCK
