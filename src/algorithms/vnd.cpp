@@ -64,17 +64,17 @@ bool vizinhanca2() {
     cout << "Custo inicial: " << custo_total << "\n\n";
 
     for (int p = 0; p < m; p++) {
-        for (size_t i = 0; i < pistas[p].size() - 1; i++) {
+        for (size_t i = 0; i < pistas[p].size() - 2; i++) {
             // Backup
             auto pistas_bkp = pistas;
             auto voos_bkp = voos;
             int id1 = pistas[p][i];
-            int id2 = pistas[p][i+1];
+            int id2 = pistas[p][i+2];
 
             cout << "  Testando P" << p << ": V" << id1 << " → V" << id2;
 
-            // Tenta mover voo i para posição i+1 (intra pista)
-            if (insertIntraPista(p, i, i+1)) {
+            // Tenta mover voo i para posição i+2 (intra pista)
+            if (insertIntraPista(p, i, i+2)) {
                 int novo_custo = calcularCustoTotal();
                 cout << " | Custo novo: " << novo_custo;
 
@@ -100,7 +100,7 @@ bool vizinhanca2() {
 
 
 
-// MOVIMENTO 3: Trocar dois voos entre pistas diferentes
+// MOVIMENTO 3: 
 bool vizinhanca3() {
     int max_gap = 5;
 
@@ -114,7 +114,6 @@ bool vizinhanca3() {
             for (int j = i + 2; j < min(i + max_gap, tam); j++) {
                 cout << "  Testando P" << p << ": invertendo [" << i << ", " << j << "]";
 
-                // Backup
                 auto pistas_bkp = pistas;
                 auto voos_bkp = voos;
                 int custo_antigo = custo_total;
@@ -142,10 +141,6 @@ bool vizinhanca3() {
 }
 
 
-
-
-
-// VND principal com critério de parada melhorado
 void VND() {
     vector<bool(*)()> vizinhancas = {vizinhanca1, vizinhanca2, vizinhanca3};
     int k = 0;
@@ -160,9 +155,9 @@ void VND() {
 
         if (melhorou) {
             cout << "Melhoria encontrada! Voltando para vizinhança 1.\n\n";
-            k = 0;  // reinicia na vizinhança 1
+            k = 0;  
         } else {
-            k++;    // tenta próxima vizinhança
+            k++;   
         }
     }
 
