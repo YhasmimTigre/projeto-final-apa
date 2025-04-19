@@ -18,171 +18,127 @@ vector<Voo> voos_backup = voos;
 //double melhor_custo = custo_total;
 
 // MOVIMENTO 1: Inverter dois voos consecutivos na mesma pista
-void vizinhanca1() {
-    bool melhorou;
-    int iter = 0;
-    
+bool vizinhanca1() {
     cout << "\n--- VIZINHANCA 1 INICIADA ---\n";
     cout << "Custo inicial: " << custo_total << "\n\n";
 
-    do {
-        melhorou = false;
-        iter++;
-        
-        cout << "ITERACAO " << iter << ":\n";
-        
-        for (int p = 0; p < m; p++) {
-            for (size_t i = 0; i < pistas[p].size() - 1; i++) {
-                // Backup
-                auto pistas_bkp = pistas;
-                auto voos_bkp = voos;
-                int custo_antigo = custo_total;
-                int id1 = pistas[p][i];
-                int id2 = pistas[p][i+1];
+    for (int p = 0; p < m; p++) {
+        for (size_t i = 0; i < pistas[p].size() - 1; i++) {
+            // Backup
+            auto pistas_bkp = pistas;
+            auto voos_bkp = voos;
+            int custo_antigo = custo_total;
+            int id1 = pistas[p][i];
+            int id2 = pistas[p][i+1];
 
-                cout << "  Testando P" << p << ": V" << id1 << " ↔ V" << id2;
-                
-                if (inverterVoosConsecutivos(p, i)) {
-                    int novo_custo = calcularCustoTotal();
-                    cout << " | Custo novo: " << novo_custo;
-                    
-                    if (novo_custo < custo_total) {
-                        custo_total = novo_custo;
-                        melhorou = true;
-                        cout << " \033[1;32m(MELHOR!)\033[0m";
-                    } else {
-                        // Desfaz
-                        pistas = pistas_bkp;
-                        voos = voos_bkp;
-                        cout << " \033[1;31m(piorou)\033[0m";
-                    }
+            cout << "  Testando P" << p << ": V" << id1 << " ↔ V" << id2;
+
+            if (inverterVoosConsecutivos(p, i)) {
+                int novo_custo = calcularCustoTotal();
+                cout << " | Custo novo: " << novo_custo;
+
+                if (novo_custo < custo_total) {
+                    custo_total = novo_custo;
+                    cout << " \033[1;32m(MELHOR!)\033[0m\n";
+                    return true;  // <<< FIRST IMPROVEMENT: retorna assim que melhora
                 } else {
-                    cout << " | \033[1;33m(invalido)\033[0m";
+                    // Desfaz
+                    pistas = pistas_bkp;
+                    voos = voos_bkp;
+                    cout << " \033[1;31m(piorou)\033[0m\n";
                 }
-                
-                cout << endl;
+            } else {
+                cout << " | \033[1;33m(invalido)\033[0m\n";
             }
         }
-        
-        cout << "Melhor custo atual: " << custo_total << "\n\n";
-        
-    } while (melhorou && iter < 50);
+    }
 
-    cout << "--- FIM VIZINHANCA 1 ---\n";
-    cout << "Melhor custo final: " << custo_total << endl;
-    cout << "Total iteracoes: " << iter << endl;
+    cout << "\n--- FIM VIZINHANCA 1 ---\n";
+    cout << "Custo final: " << custo_total << "\n";
+    return false;  // nenhuma melhoria encontrada
 }
-// MOVIMENTO 2: Mover um voo para outra pista
-void vizinhanca2() {
-    bool melhorou;
-    int iter = 0;
 
+// MOVIMENTO 2: Mover um voo para outra pista
+bool vizinhanca2() {
     cout << "\n--- VIZINHANCA 2 INICIADA ---\n";
     cout << "Custo inicial: " << custo_total << "\n\n";
 
-    do {
-        melhorou = false;
-        iter++;
+    for (int p = 0; p < m; p++) {
+        for (size_t i = 0; i < pistas[p].size() - 1; i++) {
+            // Backup
+            auto pistas_bkp = pistas;
+            auto voos_bkp = voos;
+            int id1 = pistas[p][i];
+            int id2 = pistas[p][i+1];
 
-        cout << "ITERACAO " << iter << ":\n";
+            cout << "  Testando P" << p << ": V" << id1 << " → V" << id2;
 
-        for (int p = 0; p < m; p++) {
-            for (size_t i = 0; i < pistas[p].size() - 1; i++) {
-                // Backup
-                auto pistas_bkp = pistas;
-                auto voos_bkp = voos;
-                int custo_antigo = custo_total;
-                int id1 = pistas[p][i];
-                int id2 = pistas[p][i+1];
+            // Tenta mover voo i para posição i+1 (intra pista)
+            if (insertIntraPista(p, i, i+1)) {
+                int novo_custo = calcularCustoTotal();
+                cout << " | Custo novo: " << novo_custo;
 
-                cout << "  Testando P" << p << ": V" << id1 << " ↔ V" << id2;
-
-                // Aqui substituímos o uso de inverterVoosConsecutivos por insertIntraPista
-                if (insertIntraPista(p, i, i+1)) {  // Tentando mover o voo i para a posição i+1
-                    int novo_custo = calcularCustoTotal();
-                    cout << " | Custo novo: " << novo_custo;
-
-                    if (novo_custo < custo_total) {
-                        custo_total = novo_custo;
-                        melhorou = true;
-                        cout << " \033[1;32m(MELHOR!)\033[0m";
-                    } else {
-                        // Desfaz a mudança se o custo não melhorou
-                        pistas = pistas_bkp;
-                        voos = voos_bkp;
-                        cout << " \033[1;31m(piorou)\033[0m";
-                    }
+                if (novo_custo < custo_total) {
+                    custo_total = novo_custo;
+                    cout << " \033[1;32m(MELHOR!)\033[0m\n";
+                    return true;  // <<< FIRST IMPROVEMENT
                 } else {
-                    cout << " | \033[1;33m(invalido)\033[0m";
+                    pistas = pistas_bkp;
+                    voos = voos_bkp;
+                    cout << " \033[1;31m(piorou)\033[0m\n";
                 }
-
-                cout << endl;
+            } else {
+                cout << " | \033[1;33m(invalido)\033[0m\n";
             }
         }
+    }
 
-        cout << "Melhor custo atual: " << custo_total << "\n\n";
-
-    } while (melhorou && iter < 50);
-
-    cout << "--- FIM VIZINHANCA 2 ---\n";
-    cout << "Melhor custo final: " << custo_total << endl;
-    cout << "Total iteracoes: " << iter << endl;
+    cout << "\n--- FIM VIZINHANCA 2 ---\n";
+    cout << "Custo final: " << custo_total << "\n";
+    return false;  // nenhuma melhoria
 }
 
 
 
 // MOVIMENTO 3: Trocar dois voos entre pistas diferentes
-void vizinhanca3() {
-    bool melhorou;
-    int iter = 0;
+bool vizinhanca3() {
     int max_gap = 5;
 
     cout << "\n--- VIZINHANÇA 3 (2-Opt com limite) INICIADA ---\n";
     cout << "Custo inicial: " << custo_total << "\n\n";
 
-    do {
-        melhorou = false;
-        iter++;
-        cout << "ITERACAO " << iter << ":\n";
+    for (int p = 0; p < m; p++) {
+        int tam = pistas[p].size();
 
-        for (int p = 0; p < m; p++) {
-            int tam = pistas[p].size();
+        for (int i = 0; i < tam - 1; i++) {
+            for (int j = i + 2; j < min(i + max_gap, tam); j++) {
+                cout << "  Testando P" << p << ": invertendo [" << i << ", " << j << "]";
 
-            for (int i = 0; i < tam - 1; i++) {
-                for (int j = i + 2; j < min(i + max_gap, tam); j++) {
-                    cout << "  Testando P" << p << ": invertendo [" << i << ", " << j << "]";
+                // Backup
+                auto pistas_bkp = pistas;
+                auto voos_bkp = voos;
+                int custo_antigo = custo_total;
 
-                    // Backup
-                    auto pistas_bkp = pistas;
-                    auto voos_bkp = voos;
-                    int custo_antigo = custo_total;
+                // Aplicar inversão
+                opt2IntraPista(p, i, j);
+                int novo_custo = calcularCustoTotal();
 
-                    // Aplicar inversão
-                    opt2IntraPista(p, i, j);
-                    int novo_custo = calcularCustoTotal();
-
-                    if (novo_custo < custo_antigo) {
-                        custo_total = novo_custo;
-                        cout << " \033[1;32m(MELHOR!)\033[0m";
-                        melhorou = true;
-                    } else {
-                        pistas = pistas_bkp;
-                        voos = voos_bkp;
-                        cout << " \033[1;31m(não melhorou)\033[0m";
-                    }
-
-                    cout << endl;
+                if (novo_custo < custo_antigo) {
+                    custo_total = novo_custo;
+                    cout << " \033[1;32m(MELHOR!)\033[0m\n";
+                    return true;  // <<< FIRST IMPROVEMENT
+                } else {
+                    pistas = pistas_bkp;
+                    voos = voos_bkp;
+                    cout << " \033[1;31m(não melhorou)\033[0m\n";
                 }
             }
         }
+    }
 
-        cout << "Melhor custo atual: " << custo_total << "\n\n";
-
-    } while (melhorou && iter < 50);
-
-    cout << "--- FIM VIZINHANÇA 3 ---\n";
-    cout << "Melhor custo final: " << custo_total << endl;
-    cout << "Total de iterações: " << iter << endl;
+    cout << "\n--- FIM VIZINHANÇA 3 ---\n";
+    cout << "Custo final: " << custo_total << "\n";
+    return false;
 }
 
 
@@ -190,60 +146,26 @@ void vizinhanca3() {
 
 
 // VND principal com critério de parada melhorado
-/*void VND() {
-    // Inicializa com o custo da solução gulosa
-    custo_total = calcularCustoTotal();
-    novo_custo = custo_total; // Adicionar esta linha
+void VND() {
+    vector<bool(*)()> vizinhancas = {vizinhanca1, vizinhanca2, vizinhanca3};
+    int k = 0;
 
-    cout << "Custo inicial: " << custo_total << endl;
+    cout << "\n--- VND INICIADO ---\n";
+    cout << "Custo inicial: " << custo_total << "\n\n";
 
-    vector<bool (*)()> vizinhancas = {vizinhanca1, vizinhanca2, vizinhanca3};
-    bool melhoria_global = false;
-    int iteracoes = 0;
-    const int MAX_ITERACOES = 100; // Limite de segurança
+    while (k < vizinhancas.size()) {
+        cout << "Tentando vizinhança " << k + 1 << "...\n";
 
-    do {
-        melhoria_global = false;
+        bool melhorou = vizinhancas[k]();
 
-        for (size_t k = 0; k < vizinhancas.size(); k++) {
-            bool melhoria_local = vizinhancas[k]();
-
-            if (melhoria_local) {
-                melhoria_global = true;
-                cout << "Melhoria encontrada com vizinhanca " << k+1
-                     << ", novo custo: " << custo_total << endl;
-                break; // Volta para a primeira vizinhança
-            }
+        if (melhorou) {
+            cout << "Melhoria encontrada! Voltando para vizinhança 1.\n\n";
+            k = 0;  // reinicia na vizinhança 1
+        } else {
+            k++;    // tenta próxima vizinhança
         }
-
-        iteracoes++;
-        validarCusto(custo_total, "VND iteracao " + to_string(iteracoes));
-        if (iteracoes >= MAX_ITERACOES) {
-            cout << "Limite de iteracoes atingido (" << MAX_ITERACOES << ")" << endl;
-            break;
-        }
-
-    } while (melhoria_global);
-
-    // Atualiza o novo_custo global com o melhor encontrado
-    novo_custo = custo_total;
-
-    // Exibe solução final
-    cout << "\n--- Solucao Final VND ---\n";
-    cout << "Custo total: " << novo_custo << "\n";
-    cout << "Iteracoes realizadas: " << iteracoes << "\n";
-
-    vector<vector<int>> voos_por_pista(m);
-    for (const auto& voo : voos) {
-        voos_por_pista[voo.pista_alocada].push_back(voo.id + 1);
     }
 
-    for (int p = 0; p < m; p++) {
-        cout << "Pista " << p+1 << ": ";
-        for (int id : voos_por_pista[p]) {
-            cout << id << " ";
-        }
-        cout << "\n";
-    }
-}*/
-
+    cout << "--- FIM DO VND ---\n";
+    cout << "Melhor custo final: " << custo_total << endl;
+}

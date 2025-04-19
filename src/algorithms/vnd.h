@@ -2,9 +2,9 @@
 #define VND_H
 
 void VND();
-void vizinhanca1();
-void vizinhanca2();
-void vizinhanca3();
+bool vizinhanca1();
+bool vizinhanca2();
+bool vizinhanca3();
 void recalcularSolucao();
 
 #endif
