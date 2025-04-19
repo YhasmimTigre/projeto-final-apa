@@ -1,4 +1,5 @@
 #include <iostream>
+#include<algorithm>
 #include "alocador.h"
 #include "../core/airport_loader.h"
 #include "guloso.h"  
@@ -6,6 +7,7 @@
 using namespace std;
 
 int custo_total = 0;
+int max_gap;
 
 //vizinhancas
 
@@ -123,6 +125,13 @@ bool insertIntraPista(int pista, int i, int j){
 }
 
 
+bool opt2IntraPista(int pista, int i, int j, int max_gap) {
+    if (j - i < 1 || j - i > max_gap) return false; 
+
+    reverse(pistas[pista].begin() + i, pistas[pista].begin() + j + 1);
+    calcularMultas();  
+    return true;
+}
 
 
 
