@@ -8,45 +8,122 @@
 #include "alocador.h"
 #include "guloso.h"
 #include "vnd.h"
+#include "ils.h"
 
 using namespace std;
 
-
-void perturbar(vector<Voo>* solucao, int k = 2) { // k é a mudança aleatória
-    int n = solucao->size();
-
-    random_device rd; //gera num aleatórios
-    mt19937 gen(rd());
-    uniform_int_distribution<> vooDist(0, n - 1); // voos aleatórios
-    uniform_int_distribution<> pistaDist(0, m - 1); // pistas aleatórias
-
-    for (int i = 0; i < k; i++) {
-        int idx = vooDist(gen);
-        int novaPista = pistaDist(gen);
-        (*solucao)[idx].pista_alocada = novaPista;
+void imprimirSolucao(const vector<Voo>& solucao) {
+    for (const auto& voo : solucao) {
+        cout << "Voo " << voo.id
+             << ": pista = " << voo.pista_alocada
+             << ", horário real = " << voo.horario_real
+             << ", penalidade = " << voo.penalidade
+             << "\n";
     }
+    cout << "-----------------------\n";
 }
 
 
+void perturbar(int tamanhoBloco = 2) {
+    random_device rd;
+    mt19937 gen(rd());
+
+    uniform_int_distribution<> pistaDist(0, m - 1);
+
+    int pistaA, pistaB;
+    do {
+        pistaA = pistaDist(gen);
+        pistaB = pistaDist(gen);
+    } while (pistaA == pistaB || pistas[pistaA].size() < tamanhoBloco || pistas[pistaB].size() < tamanhoBloco);
+
+    uniform_int_distribution<> idxA(0, pistas[pistaA].size() - tamanhoBloco);
+    uniform_int_distribution<> idxB(0, pistas[pistaB].size() - tamanhoBloco);
+
+    int startA = idxA(gen);
+    int startB = idxB(gen);
+
+    // Troca os blocos de voos entre as pistas
+    vector<int> blocoA(pistas[pistaA].begin() + startA, pistas[pistaA].begin() + startA + tamanhoBloco);
+    vector<int> blocoB(pistas[pistaB].begin() + startB, pistas[pistaB].begin() + startB + tamanhoBloco);
+
+    copy(blocoB.begin(), blocoB.end(), pistas[pistaA].begin() + startA);
+    copy(blocoA.begin(), blocoA.end(), pistas[pistaB].begin() + startB);
+
+    for (int id : blocoA)
+        voos[id].pista_alocada = pistaB;
+    for (int id : blocoB)
+        voos[id].pista_alocada = pistaA;
+
+    // Atualiza voos_anterior e horarios nas duas pistas
+    auto atualizarPista = [](int pista) {
+        int anterior = -1;
+        int tempoAtual = 0;
+
+        for (int id : pistas[pista]) {
+            voos[id].voo_anterior = anterior;
+
+            if (anterior == -1) {
+                voos[id].horario_real = voos[id].horario_prev;
+            } else {
+                int espera = tempo_espera[voos[anterior].id][voos[id].id];
+                voos[id].horario_real = max(voos[anterior].horario_real + voos[anterior].duracao + espera, voos[id].horario_prev);
+            }
+
+            anterior = id;
+        }
+    };
+
+    atualizarPista(pistaA);
+    atualizarPista(pistaB);
+
+    // Atualiza custo total
+    custo_total = 0;
+    for (const Voo& v : voos) {
+        if (v.horario_real > v.horario_prev)
+            custo_total += (v.horario_real - v.horario_prev) * v.multa;
+        else
+            custo_total += (v.horario_prev - v.horario_real) * v.penalidade;
+    }
+
+    cout << "[Perturbação] Troca de blocos entre pistas " << pistaA << " e " << pistaB << " concluída.\n";
+}
+
 vector<Voo> ILS(int maxIter, int& melhorCustoFinal) {
-    // 1. Geração da solução inicial e refinamento
-    vector<Voo> solucaoAtual = Guloso();
-    solucaoAtual = VND();
+    // 1. Geração da solução inicial
+    VND();            // melhora a solução inicial
+    vector<Voo> solucaoAtual = voos;
     int custoAtual = calcularCustoTotal();
 
     vector<Voo> melhorSolucao = solucaoAtual;
     melhorCustoFinal = custoAtual;
 
     for (int iter = 0; iter < maxIter; iter++) {
-        // 2. Perturba a solução atual
-        vector<Voo> solucaoPerturbada = perturbar(solucaoAtual);
+        // 2. Cria uma cópia perturbada da solução atual
 
-        // 3. Aplica VND na solução perturbada
-        vector<Voo> solucaoLocal = VND();
+        vector<Voo> solucaoPerturbada = solucaoAtual;
+
+        cout << "Antes da perturbação (iter " << iter + 1 << "):\n";
+        imprimirSolucao(solucaoAtual);
+
+        perturbar();
+
+        cout << "Depois da perturbação:\n";
+        imprimirSolucao(solucaoPerturbada);
+
+        // 3. Atribui ao vetor global para que o VND opere sobre ele
+        voos = solucaoPerturbada;
+        VND();  // refina a solução perturbada
+        vector<Voo> solucaoLocal = voos;
         int custoLocal = calcularCustoTotal();
+
+        cout << "Após VND na solução perturbada:\n";
+        imprimirSolucao(voos);  // `voos` é seu vetor global atualizado
+        cout << "Custo local após VND: " << custoLocal << "\n";
+
 
         // 4. Aceita se for melhor
         if (custoLocal < custoAtual) {
+            cout << "Solução melhor encontrada na iteração " << iter + 1 << " com custo " << custoLocal << "\n";
             solucaoAtual = solucaoLocal;
             custoAtual = custoLocal;
 
@@ -60,3 +137,5 @@ vector<Voo> ILS(int maxIter, int& melhorCustoFinal) {
 
     return melhorSolucao;
 }
+
+
