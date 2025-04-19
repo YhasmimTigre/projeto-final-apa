@@ -3,6 +3,7 @@
 
 void VND();
 void vizinhanca1();
+void vizinhanca2();
 void recalcularSolucao();
 
 #endif

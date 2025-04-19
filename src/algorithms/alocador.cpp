@@ -9,7 +9,7 @@ int custo_total = 0;
 
 //vizinhancas
 
-bool inverterVoosConsecutivos(int pista, int posicao_voo) {
+bool inverterVoosConsecutivos(int pista, int posicao_voo) { // Mov. Swap
     // Verificação inicial
     if (pista < 0 || pista >= m || posicao_voo < 0 || posicao_voo >= static_cast<int>(pistas[pista].size()) - 1) {
         cerr << "Inválido: pista=" << pista << ", pos=" << posicao_voo << endl;
@@ -74,33 +74,59 @@ bool inverterVoosConsecutivos(int pista, int posicao_voo) {
     return true;
 }
 
-
-
-
-//funcao aux
-/*bool recalcularTemposVizinhanca2(int pista) {
-    if (pistas[pista].empty()) return true;
-    
-    int voo_atual = pistas[pista][0];
-    voos[voo_atual].horario_real = max(voos[voo_atual].horario_prev, 0);
-    
-    for (size_t i = 1; i < pistas[pista].size(); i++) {
-        int voo_anterior = pistas[pista][i-1];
-        voo_atual = pistas[pista][i];
-        
-        int tempo_min = voos[voo_anterior].horario_real + voos[voo_anterior].duracao 
-                      + tempo_espera[voo_anterior][voo_atual];
-        
-        if (tempo_min > voos[voo_atual].horario_prev + MAX_ATRASO) {
-            return false; // Troca inviável
-        }
-        
-        voos[voo_atual].horario_real = max(tempo_min, voos[voo_atual].horario_prev);
+bool insertIntraPista(int pista, int i, int j){
+    if (pista < 0 || pista >= m || i < 0 || j < 0 || i >= static_cast<int>(pistas[pista].size()) || j >= static_cast<int>(pistas[pista].size())) {
+        cerr << "Inválido: pista=" << pista << ", i=" << i << ", j=" << j << endl;
+        return false;
     }
+    if (i == j) return false; // Não faz sentido mover para a mesma posição
+    //if (i > j) j--; // Garante que i < j
+
+    int id_voo = pistas[pista][i];
+
+    pistas[pista].erase(pistas[pista].begin() + i); // Remove o voo da posição i
+    pistas[pista].insert(pistas[pista].begin() + j, id_voo); // Insere na posição j
+    // Atualiza o voo
+    voos[id_voo].pista_alocada = pista;
+    voos[id_voo].horario_real = 0; // Resetando o horário real
+    for (int k = 0; k < pistas[pista].size(); ++k) {
+        int id = pistas[pista][k];
+        if (k == 0) {
+            voos[id].horario_real = max(voos[id].horario_prev, 0);
+        } else {
+            int tempo_min = voos[pistas[pista][k-1]].horario_real + voos[pistas[pista][k-1]].duracao + tempo_espera[pistas[pista][k-1]][id];
+            voos[id].horario_real = max(tempo_min, voos[id].horario_prev);
+        }
+    }
+    // Atualiza o voo anterior
+    if (i > 0) {
+        voos[id_voo].voo_anterior = pistas[pista][i - 1];
+    } else {
+        voos[id_voo].voo_anterior = -1;
+    }
+    if (j < static_cast<int>(pistas[pista].size()) - 1) {
+        voos[id_voo].voo_anterior = pistas[pista][j + 1];
+    } else {
+        voos[id_voo].voo_anterior = -1;
+    }
+    // Debug: mostra voos após inserção
+    cout << "=== APÓS INSERÇÃO ===" << endl;
+    cout << "Voo " << id_voo << ": HR=" << voos[id_voo].horario_real 
+         << ", Ant=" << voos[id_voo].voo_anterior << endl;
+    cout << "Ordem na pista: ";
+    for (int id : pistas[pista]) cout << id << " ";
+    cout << endl << endl;
+    calcularMultas();
     return true;
+
+
 }
 
-*/
+
+
+
+
+
 //mostrar e executar guloso
 void mostrarSolucaoNoTerminal(int custo_total) {
     cout << "Custo total: " << custo_total << endl;

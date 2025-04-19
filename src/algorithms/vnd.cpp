@@ -73,49 +73,62 @@ void vizinhanca1() {
     cout << "Total iteracoes: " << iter << endl;
 }
 // MOVIMENTO 2: Mover um voo para outra pista
-/*bool vizinhanca2() {
-    // Backup apenas dos elementos necessarios apenas
-    vector<vector<Voo>> melhor_pistas = pistas;
-    vector<Voo> melhor_voos = voos;
+void vizinhanca2() {
+    bool melhorou;
+    int iter = 0;
 
-    for (int p1 = 0; p1 < m; p1++) {
-        for (size_t i = 0; i < pistas[p1].size(); i++) {
-            for (int p2 = p1 + 1; p2 < m; p2++) {
-                for (size_t j = 0; j < pistas[p2].size(); j++) {
-                    
-                    // Tenta trocar
-                    swap(pistas[p1][i], pistas[p2][j]);
-                    swap(voos[pistas[p1][i].id], voos[pistas[p2][j].id]);
+    cout << "\n--- VIZINHANCA 2 INICIADA ---\n";
+    cout << "Custo inicial: " << custo_total << "\n\n";
 
-                    // Recalcula tempos e verifica viabilidade
-                    if (recalcularTemposVizinhanca2(p1) && recalcularTemposVizinhanca2(p2)) {
-                        double novo_custo = calcularCustoTotal();
+    do {
+        melhorou = false;
+        iter++;
 
-                        if (novo_custo < melhor_custo) {
-                            melhor_custo = novo_custo;
-                            melhor_pistas = pistas;
-                            melhor_voos = voos;
-                            melhorou = true;
-                        }
+        cout << "ITERACAO " << iter << ":\n";
+
+        for (int p = 0; p < m; p++) {
+            for (size_t i = 0; i < pistas[p].size() - 1; i++) {
+                // Backup
+                auto pistas_bkp = pistas;
+                auto voos_bkp = voos;
+                int custo_antigo = custo_total;
+                int id1 = pistas[p][i];
+                int id2 = pistas[p][i+1];
+
+                cout << "  Testando P" << p << ": V" << id1 << " ↔ V" << id2;
+
+                // Aqui substituímos o uso de inverterVoosConsecutivos por insertIntraPista
+                if (insertIntraPista(p, i, i+1)) {  // Tentando mover o voo i para a posição i+1
+                    int novo_custo = calcularCustoTotal();
+                    cout << " | Custo novo: " << novo_custo;
+
+                    if (novo_custo < custo_total) {
+                        custo_total = novo_custo;
+                        melhorou = true;
+                        cout << " \033[1;32m(MELHOR!)\033[0m";
+                    } else {
+                        // Desfaz a mudança se o custo não melhorou
+                        pistas = pistas_bkp;
+                        voos = voos_bkp;
+                        cout << " \033[1;31m(piorou)\033[0m";
                     }
-
-                    // Desfaz a troca imediatamente
-                    swap(pistas[p1][i], pistas[p2][j]);
-                    swap(voos[pistas[p1][i].id], voos[pistas[p2][j].id]);
+                } else {
+                    cout << " | \033[1;33m(invalido)\033[0m";
                 }
+
+                cout << endl;
             }
         }
-    }
 
-    // Aplica a melhor troca encontrada
-    if (melhorou) {
-        pistas = melhor_pistas;
-        voos = melhor_voos;
-        custo_total = melhor_custo;
-    }
+        cout << "Melhor custo atual: " << custo_total << "\n\n";
 
-    return melhorou;
-}*/
+    } while (melhorou && iter < 50);
+
+    cout << "--- FIM VIZINHANCA 2 ---\n";
+    cout << "Melhor custo final: " << custo_total << endl;
+    cout << "Total iteracoes: " << iter << endl;
+}
+
 
 
 // MOVIMENTO 3: Trocar dois voos entre pistas diferentes
