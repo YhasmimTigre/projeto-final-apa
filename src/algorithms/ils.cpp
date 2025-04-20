@@ -90,50 +90,60 @@ void perturbar(Airport* airport, int tamanhoBloco = 2) {
 }
 
 vector<Voo> ILS(Airport* airport, int maxIter) {
-    // 1. Geração da solução inicial
-    VND(airport);            // melhora a solução inicial
-    vector<Voo> solucaoAtual = airport->voos; // solução inicial
-    int custoAtual = airport->calcularCustoTotal();
+    // 1. Solução inicial
+    VND(airport);
+    vector<Voo> melhorSolucao = airport->voos;
+    int melhorCusto = airport->calcularCustoTotal();
+    
+    vector<Voo> solucaoAtual = melhorSolucao;
+    int custoAtual = melhorCusto;
 
-    vector<Voo> melhorSolucao = solucaoAtual;
-    int melhorCustoFinal = custoAtual;
+    // Configuração do ILS
+    const double temperatura_inicial = melhorCusto * 0.1;
+    double temperatura = temperatura_inicial;
+    const double fator_resfriamento = 0.95;
+
+    random_device rd;
+    mt19937 gen(rd());
+    uniform_real_distribution<> dis(0.0, 1.0);
 
     for (int iter = 0; iter < maxIter; iter++) {
-        // 2. Cria uma cópia perturbada da solução atual
+        // 2. Perturbação
+        Airport copia = *airport; // Cria cópia completa
+        perturbar(&copia);
+        
+        // 3. Busca Local
+        VND(&copia);
+        if (copia.calcularCustoTotal() < airport->calcularCustoTotal()) {
+            *airport = copia;  // Atualiza somente se melhorar
+        }
+        int custoLocal = copia.calcularCustoTotal();
 
-        vector<Voo> solucaoPerturbada = solucaoAtual;
-
-        cout << "Antes da perturbação (iter " << iter + 1 << "):\n";
-        imprimirSolucao(solucaoAtual);
-
-        perturbar(airport);
-
-        cout << "Depois da perturbação:\n";
-        imprimirSolucao(solucaoPerturbada);
-
-        // 3. Atribui ao vetor global para que o VND opere sobre ele
-        airport->voos = solucaoPerturbada;
-        VND(airport);  // refina a solução perturbada
-        vector<Voo> solucaoLocal = airport->voos;
-        int custoLocal = airport->calcularCustoTotal();
-
-        cout << "Após VND na solução perturbada:\n";
-        imprimirSolucao(airport->voos);  // `voos` é seu vetor global atualizado
-        cout << "Custo local após VND: " << custoLocal << "\n";
-
-
-        // 4. Aceita se for melhor
+        // 4. Critério de Aceitação (com tempera simulada)
+        bool aceitar = false;
         if (custoLocal < custoAtual) {
-            cout << "Solução melhor encontrada na iteração " << iter + 1 << " com custo " << custoLocal << "\n";
-            solucaoAtual = solucaoLocal;
-            custoAtual = custoLocal;
-
-            if (custoAtual < melhorCustoFinal) {
-                melhorSolucao = solucaoAtual;
-                melhorCustoFinal = custoAtual;
-                cout << "Iteração " << iter + 1 << ": nova melhor solução com custo " << melhorCustoFinal << endl;
+            aceitar = true;
+        } else {
+            double probabilidade = exp((custoAtual - custoLocal) / temperatura);
+            if (dis(gen) < probabilidade) {
+                aceitar = true;
             }
         }
+
+        if (aceitar) {
+            *airport = copia; // Atualiza a solução atual
+            solucaoAtual = copia.voos;
+            custoAtual = custoLocal;
+
+            if (custoLocal < melhorCusto) {
+                melhorSolucao = copia.voos;
+                melhorCusto = custoLocal;
+                cout << "Iter " << iter << ": Novo melhor custo = " << melhorCusto << endl;
+            }
+        }
+
+        // Resfriamento
+        temperatura *= fator_resfriamento;
     }
 
     return melhorSolucao;

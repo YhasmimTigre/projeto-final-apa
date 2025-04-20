@@ -81,9 +81,19 @@ void Airport::escreverSolucao(const string& nome_arquivo) {
 //funções aux
 void Airport::calcularMultas() {
     for (auto& voo : voos) {
-        voo.multa = max(0, voo.horario_real - voo.horario_prev) * voo.penalidade;
-    }
 
+        int horario = voo.horario_real - voo.horario_prev;
+
+        if (horario < 0) {
+
+            cout << "Atraso negativo (invalido) par ao voo: " << voo.id+1 << endl;
+            cout << "horario real: " << voo.horario_real << " || horario previsto: " << voo.horario_prev << endl;
+            cout << "Nenhuma multa aplicada." << endl << endl;
+            
+        } else {
+            voo.multa = horario * voo.penalidade;
+        }
+    }
 }
 
 int Airport::calcularCustoTotal() {
@@ -134,7 +144,7 @@ bool Airport::executarAlocacao(const string& arquivo_entrada) {
         cerr << "Falha ao carregar dados.\n";
         return false;
     }
-
+     
     Guloso(this);
     calcularMultas();
     custo_total = calcularCustoTotal();
