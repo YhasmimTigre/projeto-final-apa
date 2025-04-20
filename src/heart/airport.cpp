@@ -80,7 +80,6 @@ void Airport::escreverSolucao(const string& nome_arquivo) {
 
 //funções aux
 void Airport::calcularMultas() {
-
     for (auto& voo : voos) {
         voo.multa = max(0, voo.horario_real - voo.horario_prev) * voo.penalidade;
     }
@@ -260,39 +259,82 @@ bool Airport::opt2IntraPista(int pista, int i, int j, int max_gap) {
     // Verificação completa
     if (pista < 0 || pista >= num_pistas || i < 0 || j <= i ||
         j >= static_cast<int>(pistas[pista].size()) || (j - i) > max_gap) {
+        cerr << "Invalido: pista=" << pista << ", i=" << i << ", j=" << j << ", max_gap=" << max_gap << endl;
         return false;
+    }
+
+    // Debug: mostra voos antes da operação OPT-2
+    cout << "\n=== ANTES DA OPERACAO OPT-2 ===" << endl;
+    cout << "Pista " << pista << " - Segmento de " << i << " ate " << j << endl;
+    cout << "Ordem na pista: ";
+    for (int id : pistas[pista]) cout << id << " ";
+    cout << endl;
+    
+    // Mostrar os voos no segmento
+    for (int k = i; k <= j; k++) {
+        int id_voo = pistas[pista][k];
+        cout << "Voo " << id_voo << ": HR=" << voos[id_voo].horario_real 
+             << ", Dur=" << voos[id_voo].duracao 
+             << ", Ant=" << voos[id_voo].voo_anterior
+             << ", Mul=" << voos[id_voo].multa << endl;
     }
 
     // Cria cópia para avaliação
     vector<int> nova_pista = pistas[pista];
     std::reverse(nova_pista.begin() + i, nova_pista.begin() + j + 1);
 
-    // Avalia viabilidade antes de aplicar
-    int horario_atual = (i > 0) ? voos[nova_pista[i-1]].horario_real : 0;
-    for (int k = i; k <= j; ++k) {
-        const Voo& v = voos[nova_pista[k]];
-        int tempo_min = horario_atual + ((k > 0) ? 
-                       (voos[nova_pista[k-1]].duracao + tempo_espera[nova_pista[k-1]][v.id]) : 0);
-        
-        if (tempo_min > v.horario_prev) {
-            return false;
-        }
-        horario_atual = max(tempo_min, v.horario_prev);
-    }
-
-    // Aplica a mudança se for viável
     pistas[pista] = nova_pista;
     
     // Atualiza apenas os horários afetados
-    int horario = (i > 0) ? voos[pistas[pista][i-1]].horario_real : 0;
+    int horario = (i > 0) ? voos[pistas[pista][i-1]].horario_real + 
+                           voos[pistas[pista][i-1]].duracao + 
+                           tempo_espera[pistas[pista][i-1]][pistas[pista][i]] : 0;
+                           
     for (int k = i; k <= j; ++k) {
-        Voo& v = voos[pistas[pista][k]];
-        v.horario_real = max(horario + ((k > 0) ? 
-                           (voos[pistas[pista][k-1]].duracao + tempo_espera[pistas[pista][k-1]][v.id]) : 0),
-                           v.horario_prev);
-        horario = v.horario_real;
+        int id_voo = pistas[pista][k];
+        Voo& v = voos[id_voo];
+        
+        if (k > i) {
+            int id_anterior = pistas[pista][k-1];
+            horario = max(
+                v.horario_prev,
+                voos[id_anterior].horario_real + 
+                voos[id_anterior].duracao + 
+                tempo_espera[id_anterior][id_voo]
+            );
+        } else if (i > 0) {
+            int id_anterior = pistas[pista][i-1];
+            horario = max(
+                v.horario_prev,
+                voos[id_anterior].horario_real + 
+                voos[id_anterior].duracao + 
+                tempo_espera[id_anterior][id_voo]
+            );
+        } else {
+            horario = v.horario_prev;
+        }
+        
+        v.horario_real = horario;
+        v.voo_anterior = (k > 0) ? pistas[pista][k-1] : -1;
     }
 
     calcularMultas();
+    
+    // Debug: mostra voos após a operação OPT-2
+    cout << "=== APOS OPERACAO OPT-2 ===" << endl;
+    cout << "Ordem na pista: ";
+    for (int id : pistas[pista]) cout << id << " ";
+    cout << endl;
+    
+    // Mostrar os voos no segmento após a alteração
+    for (int k = i; k <= j; k++) {
+        int id_voo = pistas[pista][k];
+        cout << "Voo " << id_voo << ": HR=" << voos[id_voo].horario_real 
+             << ", Dur=" << voos[id_voo].duracao 
+             << ", Ant=" << voos[id_voo].voo_anterior
+             << ", Mul=" << voos[id_voo].multa << endl;
+    }
+    cout << endl;
+    
     return true;
 }

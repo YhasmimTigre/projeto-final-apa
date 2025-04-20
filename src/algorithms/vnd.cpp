@@ -5,12 +5,12 @@
 using namespace std;
 
 // aux local
-static bool testarMelhoria(Airport* airport, int custo_atual, const string& mensagem) {
+static bool testarMelhoria(Airport* airport, const string& mensagem) {
 
     int novo_custo = airport->calcularCustoTotal();
     cout << mensagem << novo_custo;
     
-    if (novo_custo < custo_atual) {
+    if (novo_custo < airport->custo_melhor) {
     
         cout << " \033[1;32m(MELHOR!)\033[0m\n";
         airport->salvarMelhorSolucao();
@@ -29,8 +29,8 @@ static bool testarMelhoria(Airport* airport, int custo_atual, const string& mens
 bool vizinhanca1(Airport* airport) {
 
     cout << "\n--- VIZINHANCA 1 INICIADA ---\n";
-    int custo_atual = airport->calcularCustoTotal();
-    cout << "Custo inicial: " << custo_atual << "\n\n";
+    //int custo_atual = airport->calcularCustoTotal();
+    cout << "Custo inicial: " << airport->custo_melhor << "\n\n";
 
     bool melhorou = false;
 
@@ -47,7 +47,7 @@ bool vizinhanca1(Airport* airport) {
             // Tenta mover voo i para posição i+2 (intra pista)
             if (airport->inverterVoosConsecutivos(p, i)) {
 
-                if (testarMelhoria(airport, custo_atual, " | Custo novo: ")) {
+                if (testarMelhoria(airport, " | Custo novo: ")) {
                     melhorou = true;
                     break;  // sai do loop se houve melhoria
                 }
@@ -67,7 +67,8 @@ bool vizinhanca1(Airport* airport) {
 // MOVIMENTO 2: Mover um voo para outra pista
 bool vizinhanca2(Airport* airport) {
     cout << "\n--- VIZINHANCA 2 INICIADA ---\n";
-    cout << "Custo inicial: " << airport->custo_total << "\n\n";
+    cout << "Custo inicial: " << airport->calcularCustoTotal() << "\n\n";
+    //int custo_atual = airport->calcularCustoTotal();
 
     for (int p = 0; p < airport->num_pistas; p++) {
         for (size_t i = 0; i < airport->pistas[p].size() - 2; i++) {
@@ -79,7 +80,7 @@ bool vizinhanca2(Airport* airport) {
             // Tenta mover voo i para posição i+2 (intra pista)
             if (airport->insertIntraPista(p, i, i+2)) {
 
-                if (testarMelhoria(airport, airport->custo_total, " | Custo novo: ")) {
+                if (testarMelhoria(airport, " | Custo novo: ")) {
                     return true;
                 }
                 
@@ -89,7 +90,7 @@ bool vizinhanca2(Airport* airport) {
         }
     }
     cout << "\n--- FIM VIZINHANCA 2 ---\n";
-    cout << "Custo final: " << airport->custo_total << "\n";
+    cout << "Custo final: " << airport->calcularCustoTotal() << "\n";
     return false;  // nenhuma melhoria
 }
 
@@ -97,10 +98,10 @@ bool vizinhanca2(Airport* airport) {
 bool vizinhanca3(Airport* airport) {
 
     const int max_gap = 5; 
-    int custo_atual = airport->calcularCustoTotal();
+    //int custo_atual = airport->calcularCustoTotal();
 
     cout << "\n--- VIZINHANCA 3 (2-Opt com limite) INICIADA ---\n";
-    cout << "Custo inicial: " << custo_atual << "\n\n";
+    cout << "Custo inicial: " << airport->custo_melhor << "\n\n";
 
     for (int p = 0; p < airport->num_pistas; p++) {
 
@@ -112,7 +113,7 @@ bool vizinhanca3(Airport* airport) {
 
                 // Aplicar inversão
                 if (airport->opt2IntraPista(p, i, j, max_gap)) {
-                    if (testarMelhoria(airport, custo_atual, " | Custo novo: ")) {
+                    if (testarMelhoria(airport, " | Custo novo: ")) {
                         return true;
                     }
                 } else {
@@ -123,7 +124,7 @@ bool vizinhanca3(Airport* airport) {
     }
 
     cout << "\n--- FIM VIZINHANCA 3 ---\n";
-    cout << "Custo final: " << airport->custo_total << "\n";
+    cout << "Custo final: " << airport->custo_melhor << "\n";
     return false;
 }
 
