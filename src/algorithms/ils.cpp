@@ -2,14 +2,15 @@
 #include <iostream>
 #include <algorithm>
 #include <random>
+#include <ctime>
 
 #include "ils.h"
 #include "vnd.h"
 
 using namespace std;
 
-void imprimirSolucao(const vector<Voo>& solucao) {
-    for (const auto& voo : solucao) {
+void imprimirSolucao(const Airport* airport) {
+    for (const auto& voo : airport->voos) {
         cout << "Voo " << voo.id
              << ": pista = " << voo.pista_alocada
              << ", horário real = " << voo.horario_real
@@ -19,57 +20,59 @@ void imprimirSolucao(const vector<Voo>& solucao) {
     cout << "-----------------------\n";
 }
 
-
 void perturbar(Airport* airport, int tamanhoBloco = 2) {
-
-    auto& pistas = airport->pistas;
-    auto& voos = airport->voos;
-    auto& tempo_espera = airport->tempo_espera;
-
     random_device rd;
     mt19937 gen(rd());
-
     uniform_int_distribution<> pistaDist(0, airport->num_pistas - 1);
 
     int pistaA, pistaB;
     do {
         pistaA = pistaDist(gen);
         pistaB = pistaDist(gen);
-    } while (pistaA == pistaB || pistas[pistaA].size() < tamanhoBloco || pistas[pistaB].size() < tamanhoBloco);
+    } while (pistaA == pistaB || 
+             airport->pistas[pistaA].size() < tamanhoBloco || 
+             airport->pistas[pistaB].size() < tamanhoBloco);
 
-    uniform_int_distribution<> idxA(0, pistas[pistaA].size() - tamanhoBloco);
-    uniform_int_distribution<> idxB(0, pistas[pistaB].size() - tamanhoBloco);
+    uniform_int_distribution<> idxA(0, airport->pistas[pistaA].size() - tamanhoBloco);
+    uniform_int_distribution<> idxB(0, airport->pistas[pistaB].size() - tamanhoBloco);
 
     int startA = idxA(gen);
     int startB = idxB(gen);
 
     // Troca os blocos de voos entre as pistas
-    vector<int> blocoA(pistas[pistaA].begin() + startA, pistas[pistaA].begin() + startA + tamanhoBloco);
-    vector<int> blocoB(pistas[pistaB].begin() + startB, pistas[pistaB].begin() + startB + tamanhoBloco);
+    vector<int> blocoA(airport->pistas[pistaA].begin() + startA, 
+                      airport->pistas[pistaA].begin() + startA + tamanhoBloco);
+    vector<int> blocoB(airport->pistas[pistaB].begin() + startB, 
+                      airport->pistas[pistaB].begin() + startB + tamanhoBloco);
 
-    copy(blocoB.begin(), blocoB.end(), pistas[pistaA].begin() + startA);
-    copy(blocoA.begin(), blocoA.end(), pistas[pistaB].begin() + startB);
+    // Realiza a troca
+    for (int i = 0; i < tamanhoBloco; i++) {
+        airport->pistas[pistaA][startA + i] = blocoB[i];
+        airport->pistas[pistaB][startB + i] = blocoA[i];
+        
+        // Atualiza as pistas alocadas
+        airport->voos[blocoB[i]].pista_alocada = pistaA;
+        airport->voos[blocoA[i]].pista_alocada = pistaB;
+    }
 
-    for (int id : blocoA)
-        voos[id].pista_alocada = pistaB;
-    for (int id : blocoB)
-        voos[id].pista_alocada = pistaA;
-
-    // Atualiza voos_anterior e horarios nas duas pistas
-    auto atualizarPista = [&voos, &pistas, &tempo_espera](int pista) {
+    // Atualiza horários e predecessores
+    auto atualizarPista = [airport](int pista) {
         int anterior = -1;
         int tempoAtual = 0;
 
-        for (int id : pistas[pista]) {
-            voos[id].voo_anterior = anterior;
+        for (int id : airport->pistas[pista]) {
+            airport->voos[id].voo_anterior = anterior;
 
             if (anterior == -1) {
-                voos[id].horario_real = voos[id].horario_prev;
+                airport->voos[id].horario_real = airport->voos[id].horario_prev;
             } else {
-                int espera = tempo_espera[voos[anterior].id][voos[id].id];
-                voos[id].horario_real = max(voos[anterior].horario_real + voos[anterior].duracao + espera, voos[id].horario_prev);
+                int espera = airport->tempo_espera[anterior][id];
+                airport->voos[id].horario_real = max(
+                    airport->voos[anterior].horario_real + 
+                    airport->voos[anterior].duracao + 
+                    espera, 
+                    airport->voos[id].horario_prev);
             }
-
             anterior = id;
         }
     };
@@ -77,74 +80,48 @@ void perturbar(Airport* airport, int tamanhoBloco = 2) {
     atualizarPista(pistaA);
     atualizarPista(pistaB);
 
-    // Atualiza custo total
-    int att_custo_total = 0;
-    for (const Voo& v : voos) {
-        if (v.horario_real > v.horario_prev)
-            att_custo_total += (v.horario_real - v.horario_prev) * v.multa;
-        else
-            att_custo_total += (v.horario_prev - v.horario_real) * v.penalidade;
-    }
+    airport->calcularMultas();
 
     cout << "[Perturbação] Troca de blocos entre pistas " << pistaA << " e " << pistaB << " concluída.\n";
 }
 
-vector<Voo> ILS(Airport* airport, int maxIter) {
-    // 1. Solução inicial
+void ILS(Airport* airport, int maxIter) {
+    // Executa VND inicial
     VND(airport);
-    vector<Voo> melhorSolucao = airport->voos;
-    int melhorCusto = airport->calcularCustoTotal();
-    
-    vector<Voo> solucaoAtual = melhorSolucao;
-    int custoAtual = melhorCusto;
+    airport->salvarMelhorSolucao();
+    int melhorCusto = airport->custo_melhor;
 
-    // Configuração do ILS
-    const double temperatura_inicial = melhorCusto * 0.1;
-    double temperatura = temperatura_inicial;
-    const double fator_resfriamento = 0.95;
-
-    random_device rd;
-    mt19937 gen(rd());
-    uniform_real_distribution<> dis(0.0, 1.0);
+    cout << "\n--- Iniciando ILS ---\n";
+    cout << "Custo inicial: " << melhorCusto << "\n";
 
     for (int iter = 0; iter < maxIter; iter++) {
-        // 2. Perturbação
-        Airport copia = *airport; // Cria cópia completa
-        perturbar(&copia);
-        
-        // 3. Busca Local
-        VND(&copia);
-        if (copia.calcularCustoTotal() < airport->calcularCustoTotal()) {
-            *airport = copia;  // Atualiza somente se melhorar
-        }
-        int custoLocal = copia.calcularCustoTotal();
+        cout << "\nIteração " << iter + 1 << "/" << maxIter << endl;
 
-        // 4. Critério de Aceitação (com tempera simulada)
-        bool aceitar = false;
-        if (custoLocal < custoAtual) {
-            aceitar = true;
-        } else {
-            double probabilidade = exp((custoAtual - custoLocal) / temperatura);
-            if (dis(gen) < probabilidade) {
-                aceitar = true;
-            }
+        // Cria cópia da solução atual
+        Airport* copia = new Airport(*airport);
+
+        // Aplica perturbação
+        perturbar(copia);
+
+        // Refina com VND
+        VND(copia);
+
+        // Avalia a solução
+        int custoAtual = copia->calcularCustoTotal();
+        if (custoAtual < melhorCusto) {
+            cout << "Nova melhor solução encontrada: " << custoAtual << " (anterior: " << melhorCusto << ")\n";
+            *airport = *copia;  // Copia a solução melhorada
+            airport->salvarMelhorSolucao();
+            melhorCusto = custoAtual;
         }
 
-        if (aceitar) {
-            *airport = copia; // Atualiza a solução atual
-            solucaoAtual = copia.voos;
-            custoAtual = custoLocal;
-
-            if (custoLocal < melhorCusto) {
-                melhorSolucao = copia.voos;
-                melhorCusto = custoLocal;
-                cout << "Iter " << iter << ": Novo melhor custo = " << melhorCusto << endl;
-            }
-        }
-
-        // Resfriamento
-        temperatura *= fator_resfriamento;
+        delete copia;
     }
 
-    return melhorSolucao;
+    // Restaura a melhor solução encontrada
+    airport->restaurarMelhorSolucao();
+    cout << "\n--- Fim do ILS ---\n";
+    cout << "Melhor custo final: " << melhorCusto << "\n";
+    cout << "Melhor alocação:\n";
+    imprimirSolucao(airport);
 }

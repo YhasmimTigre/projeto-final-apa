@@ -17,6 +17,8 @@ struct Voo {
 
 class Airport {
 	public:
+		Airport() : num_voos(0), num_pistas(0), custo_total(0), custo_melhor(0) {}
+
     	std::vector<Voo> voos;
 		std::vector<std::vector<int>> pistas;
    		std::vector<std::vector<int>> tempo_espera;
@@ -43,6 +45,40 @@ class Airport {
 		
 		void salvarMelhorSolucao();
 		void restaurarMelhorSolucao();
+
+		//copias para ils
+		Airport(const Airport& other) {
+
+			voos = other.voos;
+			pistas = other.pistas;
+			tempo_espera = other.tempo_espera;
+			num_voos = other.num_voos;
+			num_pistas = other.num_pistas;
+			custo_total = other.custo_total;
+			custo_melhor = other.custo_melhor;
+			melhor_voos = other.melhor_voos;
+			melhor_pistas = other.melhor_pistas;
+
+		}	
+		//operador de atribuição
+		Airport& operator=(const Airport& other) {
+			if (this != &other) {
+
+				voos = other.voos;
+				pistas = other.pistas;
+				tempo_espera = other.tempo_espera;
+				num_voos = other.num_voos;
+				num_pistas = other.num_pistas;
+				custo_total = other.custo_total;
+				custo_melhor = other.custo_melhor;
+				melhor_voos = other.melhor_voos;
+				melhor_pistas = other.melhor_pistas;
+			
+			}
+
+			return *this;
+		}
+
 };
 
 #endif
