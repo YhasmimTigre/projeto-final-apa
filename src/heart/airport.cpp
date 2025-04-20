@@ -97,6 +97,20 @@ int Airport::calcularCustoTotal() {
     return total;
 }
 
+void Airport::salvarMelhorSolucao() {
+    melhor_voos = voos; 
+    melhor_pistas = pistas; 
+    custo_melhor = calcularCustoTotal();
+}
+
+void Airport::restaurarMelhorSolucao() {
+    if (!melhor_voos.empty()) {
+        voos = melhor_voos;
+        pistas = melhor_pistas;
+        custo_total = custo_melhor;
+    }
+}
+
 
 //mostrar e executar guloso
 void Airport::mostrarSolucaoNoTerminal(int custo_total) {

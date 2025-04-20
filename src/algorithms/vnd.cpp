@@ -13,16 +13,13 @@ static bool testarMelhoria(Airport* airport, int custo_atual, const string& mens
     if (novo_custo < custo_atual) {
     
         cout << " \033[1;32m(MELHOR!)\033[0m\n";
-        airport->custo_melhor = novo_custo;
-
-        if (novo_custo < airport->custo_melhor) {
-            airport->custo_melhor = novo_custo;
-        }
+        airport->salvarMelhorSolucao();
         return true;
     
     } else {
     
         cout << " \033[1;31m(piorou)\033[0m\n";
+        airport->restaurarMelhorSolucao();
         return false;
     
     }
@@ -163,6 +160,16 @@ void VND(Airport* airport) {
     }
 
     cout << "--- FIM DO VND ---\n";
+    
+
+    // Opcional: Mostra a melhor alocação
+    cout << "\nMelhor alocacao encontrada:\n";
     cout << "Melhor custo final: " << airport->custo_melhor << endl;
-    airport->mostrarSolucaoNoTerminal(airport->custo_melhor);
+    for (size_t p = 0; p < airport->melhor_pistas.size(); ++p) {
+        cout << "Pista " << p << ": ";
+        for (int id : airport->melhor_pistas[p]) {
+            cout << id << " ";
+        }
+        cout << endl;
+    }
 }

@@ -2,8 +2,10 @@
 #define ILS_H
 
 #include <vector>
-#include "airport_loader.h"
+#include "../heart/airport.h"
 
-vector<Voo> ILS(int maxIter, int& melhorCustoFinal);
+class Airport;
+
+std::vector<Voo> ILS(Airport* airport, int maxIter);
 
 #endif

@@ -20,6 +20,8 @@ class Airport {
     	std::vector<Voo> voos;
 		std::vector<std::vector<int>> pistas;
    		std::vector<std::vector<int>> tempo_espera;
+		std::vector<Voo> melhor_voos;
+		std::vector<std::vector<int>> melhor_pistas;
 		int num_voos, num_pistas; //n e m
 		int custo_total = 0;
 		int custo_melhor = 0;
@@ -37,6 +39,10 @@ class Airport {
 		int calcularCustoTotal();
 		void calcularMultas();
 		void escreverSolucao(const std::string& arquivo);
+
+		
+		void salvarMelhorSolucao();
+		void restaurarMelhorSolucao();
 };
 
 #endif
