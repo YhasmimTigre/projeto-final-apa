@@ -42,9 +42,9 @@ bool vizinhanca1(Airport* airport) {
 
             int id1 = airport->pistas[p][i];
             int id2 = airport->pistas[p][i+1];
-            cout << "  Testando P" << p << ": V" << id1 << " <--> V" << id2;
+            cout << "  Testando Pista " << p << ": Voo" << id1 << " <--> Voo" << id2;
 
-            // Tenta mover voo i para posição i+2 (intra pista)
+            // Tenta mover voo i para posição i+1 (intra pista)
             if (airport->inverterVoosConsecutivos(p, i)) {
 
                 if (testarMelhoria(airport, " | Custo novo: ")) {

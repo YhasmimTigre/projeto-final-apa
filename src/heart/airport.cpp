@@ -138,6 +138,24 @@ void Airport::mostrarSolucaoNoTerminal(int custo_total) {
     }
 }
 
+//mostrar e executar guloso
+void Airport::mostrarMelhorSolucao(int custo_melhor) {
+    
+    cout << "Melhor custo: " << custo_melhor << endl;
+    cout << "Alocacao de voos por pista:" << endl;
+
+    for (size_t p = 0; p < melhor_pistas.size(); ++p) {
+        cout << "Pista " << p+1 << ": ";
+
+        for (int id : melhor_pistas[p]) {
+            cout << id+1 << " ";
+        }
+        
+        cout << endl;
+    }
+}
+
+
 bool Airport::executarAlocacao(const string& arquivo_entrada) {
 
     if (!lerDados(arquivo_entrada)) {
@@ -181,11 +199,12 @@ bool Airport::inverterVoosConsecutivos(int pista, int posicao_voo) {
     // DEBUG antes
     cout << "\n=== ANTES DA INVERSAO ===" << endl;
     cout << "Pista " << pista << " - Posicoes " << posicao_voo << " e " << posicao_voo + 1 << endl;
-    cout << "Voo " << id_voo1 + 1 << ": HR=" << voo1->horario_real 
-         << ", Dur=" << voo1->duracao << ", Ant=" << voo1->voo_anterior + 1<< endl;
-    cout << "Voo " << id_voo2 + 1 << ": HR=" << voo2->horario_real 
-         << ", Dur=" << voo2->duracao << ", Ant=" << voo2->voo_anterior + 1<< endl;
-    cout << "Tempo espera " << id_voo1 + 1 << " → " << id_voo2 + 1<< ": " << tempo_espera[id_voo1][id_voo2] << endl;
+    cout << "Voo " << id_voo1 << ": HR=" << voo1->horario_real << ", HP=" << voo1->horario_prev
+         << ", Dur=" << voo1->duracao << ", Ant=" << voo1->voo_anterior << ", Multa=" << voo1->multa << endl;
+    cout << "Voo " << id_voo2 << ": HR=" << voo2->horario_real << ", HP=" << voo2->horario_prev
+         << ", Dur=" << voo2->duracao << ", Ant=" << voo2->voo_anterior << ", Multa=" << voo2->multa << endl;
+    cout << "Tempo espera " << id_voo1 << " → " << id_voo2<< ": " << tempo_espera[id_voo1][id_voo2] << endl;
+ 
 
     // Inverte as posições manualmente
     pistas[pista][posicao_voo] = id_voo2;

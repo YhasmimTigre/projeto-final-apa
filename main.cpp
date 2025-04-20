@@ -20,15 +20,15 @@ int main(int argc, char* argv[]) {
     }
 
     //2. Executa VND na solução inicial
-    //VND(&airport);
+    VND(&airport);
 
-    int maxIter = 1;  // Número de iterações
-    ILS(&airport, maxIter);
+    /*int maxIter = 1;  // Número de iterações
+    //ILS(&airport, maxIter);
 
     // 3. Mostra resultados
     cout << "\n=== RESULTADO FINAL ===" << endl;
-    airport.mostrarSolucaoNoTerminal(airport.custo_melhor);
-    airport.escreverSolucao("solucao_final.txt");
+    airport.mostrarMelhorSolucao(airport.custo_melhor);
+    airport.escreverSolucao("solucao_final.txt");*/
 
     return 0;
 }

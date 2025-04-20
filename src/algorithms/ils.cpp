@@ -60,7 +60,7 @@ void perturbar(Airport* airport, int tamanhoBloco = 2) {
         int anterior = -1;
         int tempoAtual = 0;
 
-        for (int id : airport->pistas[pista]) {
+        for (int id : airport->melhor_pistas[pista]) {
             airport->voos[id].voo_anterior = anterior;
 
             if (anterior == -1) {

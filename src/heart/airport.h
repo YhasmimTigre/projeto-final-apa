@@ -42,7 +42,7 @@ class Airport {
 		void calcularMultas();
 		void escreverSolucao(const std::string& arquivo);
 
-		
+		void mostrarMelhorSolucao(int custo_melhor);
 		void salvarMelhorSolucao();
 		void restaurarMelhorSolucao();
 
