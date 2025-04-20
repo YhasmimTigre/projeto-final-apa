@@ -155,71 +155,69 @@ bool Airport::executarAlocacao(const string& arquivo_entrada) {
 
 //VND
 //vizinhancas
-bool Airport::inverterVoosConsecutivos(int pista, int posicao_voo) { // Mov. Swap
-
-    // Verificação inicial
+bool Airport::inverterVoosConsecutivos(int pista, int posicao_voo) {
+    // Verificação de validade
     if (pista < 0 || pista >= num_pistas || posicao_voo < 0 || posicao_voo >= static_cast<int>(pistas[pista].size()) - 1) {
         cerr << "Invalido: pista=" << pista << ", pos=" << posicao_voo << endl;
         return false;
     }
 
-    int id_atual = pistas[pista][posicao_voo];
-    int id_proximo = pistas[pista][posicao_voo + 1];
+    // IDs dos voos antes da inversão
+    int id_voo1 = pistas[pista][posicao_voo];
+    int id_voo2 = pistas[pista][posicao_voo + 1];
 
-    // Debug: mostra voos antes da inversão
-    cout << "\n=== ANTES DA INVERSAO ===" << endl;
-    cout << "Pista " << pista << " - Posicoes " << posicao_voo << " e " << posicao_voo+1 << endl;
-    cout << "Voo " << id_atual << ": HR=" << voos[id_atual].horario_real 
-         << ", Dur=" << voos[id_atual].duracao 
-         << ", Ant=" << voos[id_atual].voo_anterior << endl;
-    cout << "Voo " << id_proximo << ": HR=" << voos[id_proximo].horario_real 
-         << ", Dur=" << voos[id_proximo].duracao 
-         << ", Ant=" << voos[id_proximo].voo_anterior << endl;
-    cout << "Tempo espera entre " << id_atual << "→" << id_proximo << ": " 
-         << tempo_espera[id_atual][id_proximo] << endl;
-
-    // Localiza os voos
-    Voo *voo_atual = nullptr, *voo_proximo = nullptr;
+    // Ponteiros para os voos
+    Voo *voo1 = nullptr, *voo2 = nullptr;
     for (auto& v : voos) {
-        if (v.id == id_atual) voo_atual = &v;
-        if (v.id == id_proximo) voo_proximo = &v;
+        if (v.id == id_voo1) voo1 = &v;
+        if (v.id == id_voo2) voo2 = &v;
     }
 
-    if (!voo_atual || !voo_proximo) {
-        cerr << "Erro: Voos nao encontrados (" << id_atual << " ou " << id_proximo << ")" << endl;
+    if (!voo1 || !voo2) {
+        cerr << "Erro: Voos nao encontrados (" << id_voo1 << " ou " << id_voo2 << ")" << endl;
         return false;
     }
 
-    // Calcula novo horário
-    int novo_horario_proximo = voo_atual->horario_real + voo_atual->duracao + tempo_espera[id_atual][id_proximo];
-    cout << "Novo horario para Voo " << id_atual << ": " << novo_horario_proximo << endl;
+    // DEBUG antes
+    cout << "\n=== ANTES DA INVERSAO ===" << endl;
+    cout << "Pista " << pista << " - Posicoes " << posicao_voo << " e " << posicao_voo + 1 << endl;
+    cout << "Voo " << id_voo1 + 1 << ": HR=" << voo1->horario_real 
+         << ", Dur=" << voo1->duracao << ", Ant=" << voo1->voo_anterior + 1<< endl;
+    cout << "Voo " << id_voo2 + 1 << ": HR=" << voo2->horario_real 
+         << ", Dur=" << voo2->duracao << ", Ant=" << voo2->voo_anterior + 1<< endl;
+    cout << "Tempo espera " << id_voo1 + 1 << " → " << id_voo2 + 1<< ": " << tempo_espera[id_voo1][id_voo2] << endl;
 
-    // Executa a inversão
-    swap(pistas[pista][posicao_voo], pistas[pista][posicao_voo + 1]);
-    
-    voo_proximo->horario_real = voo_atual->horario_real;
-    voo_atual->horario_real = novo_horario_proximo;
-    
-    voo_atual->voo_anterior = voo_proximo->id;
-    if (posicao_voo > 0) {
-        voo_proximo->voo_anterior = pistas[pista][posicao_voo - 1];
+    // Inverte as posições manualmente
+    pistas[pista][posicao_voo] = id_voo2;
+    pistas[pista][posicao_voo + 1] = id_voo1;
+
+    // Atualiza voo_anterior e horario_real de voo2 (agora na frente)
+    if (posicao_voo == 0) {
+        voo2->voo_anterior = -1;
+        voo2->horario_real = voo2->horario_prev;
     } else {
-        voo_proximo->voo_anterior = -1;
+        int id_voo_ant = pistas[pista][posicao_voo - 1];
+        Voo* voo_ant = &voos[id_voo_ant];
+        voo2->voo_anterior = voo_ant->id;
+        voo2->horario_real = voo_ant->horario_real + voo_ant->duracao + tempo_espera[voo_ant->id][voo2->id];
     }
 
-    // Debug: mostra voos após inversão
+    // Atualiza voo_anterior e horario_real de voo1 (agora atrás)
+    voo1->voo_anterior = voo2->id;
+    voo1->horario_real = voo2->horario_real + voo2->duracao + tempo_espera[voo2->id][voo1->id];
+
+    // DEBUG depois
     cout << "=== APOS INVERSAO ===" << endl;
-    cout << "Voo " << id_atual << ": HR=" << voo_atual->horario_real 
-         << ", Ant=" << voo_atual->voo_anterior << endl;
-    cout << "Voo " << id_proximo << ": HR=" << voo_proximo->horario_real 
-         << ", Ant=" << voo_proximo->voo_anterior << endl;
+    cout << "Voo " << voo2->id + 1 << ": HR=" << voo2->horario_real << ", Ant=" << voo2->voo_anterior + 1 << endl;
+    cout << "Voo " << voo1->id + 1 << ": HR=" << voo1->horario_real << ", Ant=" << voo1->voo_anterior + 1 << endl;
     cout << "Ordem na pista: ";
-    for (int id : pistas[pista]) cout << id << " ";
+    for (int id : pistas[pista]) cout << id + 1 << " ";
     cout << endl << endl;
 
     calcularMultas();
     return true;
 }
+
 
 
 bool Airport::insertIntraPista(int pista, int origem, int destino){
@@ -238,7 +236,7 @@ bool Airport::insertIntraPista(int pista, int origem, int destino){
     const int id_voo = pistas[pista][origem];
     Voo& voo = voos[id_voo];
 
-    if (destino > origem) destino--;
+    //if (destino > origem) destino--;
     pistas[pista].erase(pistas[pista].begin() + origem); // Remove o voo da posição origem
     pistas[pista].insert(pistas[pista].begin() + destino, id_voo); // Insere na posição destino
 
@@ -254,11 +252,11 @@ bool Airport::insertIntraPista(int pista, int origem, int destino){
 
     // Debug: mostra voos após inserção
     cout << "\n=== APOS INSERCAO ===" << endl;
-    cout << "Voo " << id_voo << ": HR=" << voos[id_voo].horario_real 
+    cout << "Voo " << id_voo + 1 << ": HR=" << voos[id_voo].horario_real 
          << ", Ant=" << voos[id_voo].voo_anterior << endl;
     cout << "Ordem na pista: ";
 
-    for (int id : pistas[pista]) cout << id << " ";
+    for (int id : pistas[pista]) cout << id + 1 << " ";
     cout << endl << endl;
     calcularMultas();
     return true;
@@ -277,13 +275,13 @@ bool Airport::opt2IntraPista(int pista, int i, int j, int max_gap) {
     cout << "\n=== ANTES DA OPERACAO OPT-2 ===" << endl;
     cout << "Pista " << pista << " - Segmento de " << i << " ate " << j << endl;
     cout << "Ordem na pista: ";
-    for (int id : pistas[pista]) cout << id << " ";
+    for (int id : pistas[pista]) cout << id + 1 << " ";
     cout << endl;
     
     // Mostrar os voos no segmento
     for (int k = i; k <= j; k++) {
         int id_voo = pistas[pista][k];
-        cout << "Voo " << id_voo << ": HR=" << voos[id_voo].horario_real 
+        cout << "Voo " << id_voo + 1 << ": HR=" << voos[id_voo].horario_real 
              << ", Dur=" << voos[id_voo].duracao 
              << ", Ant=" << voos[id_voo].voo_anterior
              << ", Mul=" << voos[id_voo].multa << endl;
@@ -333,13 +331,13 @@ bool Airport::opt2IntraPista(int pista, int i, int j, int max_gap) {
     // Debug: mostra voos após a operação OPT-2
     cout << "=== APOS OPERACAO OPT-2 ===" << endl;
     cout << "Ordem na pista: ";
-    for (int id : pistas[pista]) cout << id << " ";
+    for (int id : pistas[pista]) cout << id + 1 << " ";
     cout << endl;
     
     // Mostrar os voos no segmento após a alteração
     for (int k = i; k <= j; k++) {
         int id_voo = pistas[pista][k];
-        cout << "Voo " << id_voo << ": HR=" << voos[id_voo].horario_real 
+        cout << "Voo " << id_voo + 1 << ": HR=" << voos[id_voo].horario_real 
              << ", Dur=" << voos[id_voo].duracao 
              << ", Ant=" << voos[id_voo].voo_anterior
              << ", Mul=" << voos[id_voo].multa << endl;
