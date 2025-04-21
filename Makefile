@@ -4,7 +4,7 @@ CXXFLAGS := -std=c++11 -Wall -Iinclude
 
 TARGET := main
 
-SRCS := main.cpp src/heart/airport.cpp src/algorithms/guloso.cpp src/algorithms/vnd.cpp
+SRCS := main.cpp src/heart/airport.cpp src/algorithms/guloso.cpp src/algorithms/ils.cpp src/algorithms/vnd.cpp
 
 OBJS := $(SRCS:.cpp=.o)
 

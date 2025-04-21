@@ -17,19 +17,20 @@ struct Voo {
 
 class Airport {
 	public:
-		Airport() : num_voos(0), num_pistas(0), custo_total(0), custo_melhor(0) {}
+		Airport() : num_voos(0), num_pistas(0), custo_total(0), bkp_custo(0) {}
 
     	std::vector<Voo> voos;
 		std::vector<std::vector<int>> pistas;
    		std::vector<std::vector<int>> tempo_espera;
-		std::vector<Voo> melhor_voos;
-		std::vector<std::vector<int>> melhor_pistas;
+		std::vector<Voo> bkp_voos;
+		std::vector<std::vector<int>> bkp_pistas;
 		int num_voos, num_pistas; //n e m
 		int custo_total = 0;
-		int custo_melhor = 0;
+		int bkp_custo = 0;
 
 		bool executarAlocacao(const std::string& arquivo_entrada);
-		void mostrarSolucaoNoTerminal(int custo_total);
+		void mostrarSolucaoNoTerminal(int custo);
+		Voo* encontrarVooPorId(int id);
 
 		//vizinhanças
 		bool inverterVoosConsecutivos(int pista, int posicao_voo);
@@ -40,11 +41,12 @@ class Airport {
     	bool lerDados(const std::string& arquivo);		
 		int calcularCustoTotal();
 		void calcularMultas();
-		void escreverSolucao(const std::string& arquivo);
-
-		void mostrarMelhorSolucao(int custo_melhor);
+		
 		void salvarMelhorSolucao();
 		void restaurarMelhorSolucao();
+		int calcularBKPCustoTotal();
+		void calcularBKPMultas();
+		void mostrarSolucaoBKPNoTerminal(int custo);
 
 		//copias para ils
 		Airport(const Airport& other) {
@@ -55,9 +57,9 @@ class Airport {
 			num_voos = other.num_voos;
 			num_pistas = other.num_pistas;
 			custo_total = other.custo_total;
-			custo_melhor = other.custo_melhor;
-			melhor_voos = other.melhor_voos;
-			melhor_pistas = other.melhor_pistas;
+			bkp_custo = other.bkp_custo;
+			bkp_voos = other.bkp_voos;
+			bkp_pistas = other.bkp_pistas;
 
 		}	
 		//operador de atribuição
@@ -70,9 +72,9 @@ class Airport {
 				num_voos = other.num_voos;
 				num_pistas = other.num_pistas;
 				custo_total = other.custo_total;
-				custo_melhor = other.custo_melhor;
-				melhor_voos = other.melhor_voos;
-				melhor_pistas = other.melhor_pistas;
+				bkp_custo = other.bkp_custo;
+				bkp_voos = other.bkp_voos;
+				bkp_pistas = other.bkp_pistas;
 			
 			}
 

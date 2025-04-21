@@ -8,9 +8,11 @@ using namespace std;
 
 void Guloso(Airport* airport) {
 
+    cout << "Entrou no Guloso\n" << endl;
+
     //dados necessarios
-    auto& voos = airport->voos;
-    auto& pistas = airport->pistas;
+    auto& voos = airport->bkp_voos;
+    auto& pistas = airport->bkp_pistas;
     auto& tempo_espera = airport->tempo_espera;
     int m = airport->num_pistas;
 
@@ -81,5 +83,7 @@ void Guloso(Airport* airport) {
              << " duracao: " << voo.duracao << " penalidade: " << voo.penalidade << " multa: " << voo.multa
              << " pista: " << voo.pista_alocada << " voo que veio antes: " << voo.voo_anterior << endl;*/
     }
+
+
 
 }
