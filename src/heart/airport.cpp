@@ -8,12 +8,10 @@
 
 using namespace std;
 
-//ler e mostrar dados iniciais
 bool Airport::lerDados(const string& nome_arquivo) {
 
     ifstream MyReadFile(nome_arquivo);
     if (!MyReadFile) {
-        cout << "Erro ao abrir o arquivo" << endl;
         return false;
     }
 
@@ -52,19 +50,22 @@ bool Airport::lerDados(const string& nome_arquivo) {
 }
 
 //funções aux
+Voo* Airport::encontrarVooPorId(int id) {
+    for (auto& v : voos) {
+        if (v.id == id) {
+            return &v;
+        }
+    }
+    return nullptr;  
+}
+
 void Airport::calcularMultas() {
     for (auto& voo : voos) {
 
         int horario = voo.horario_real - voo.horario_prev;
 
-        if (horario < 0) {
-
-            cout << "Atraso negativo (invalido) par ao voo: " << voo.id << endl;
-            cout << "horario real: " << voo.horario_real << " || horario previsto: " << voo.horario_prev << endl;
-            cout << "Nenhuma multa aplicada." << endl << endl;
-            
-        } else {
-            voo.multa = horario * voo.penalidade;
+        if (horario >= 0) {
+            voo.multa = horario * voo.penalidade;            
         }
     }
 }
@@ -84,14 +85,8 @@ void Airport::calcularBKPMultas() {
 
         int horario = voo.horario_real - voo.horario_prev;
 
-        if (horario < 0) {
-
-            cout << "Atraso negativo (invalido) par ao voo: " << voo.id << endl;
-            cout << "horario real: " << voo.horario_real << " || horario previsto: " << voo.horario_prev << endl;
-            cout << "Nenhuma multa aplicada." << endl << endl;
-            
-        } else {
-            voo.multa = horario * voo.penalidade;
+        if (horario >= 0) {
+            voo.multa = horario * voo.penalidade;            
         }
     }
 }
@@ -122,75 +117,25 @@ void Airport::restaurarMelhorSolucao() {
 
 }
 
-
 //mostrar e executar guloso
-void Airport::mostrarSolucaoNoTerminal(int custo_total) {
-    
-    cout << "Custo total: " << custo_total << endl;
-    cout << "Alocacao de voos por pista:" << endl;
-
-    for (size_t p = 0; p < pistas.size(); ++p) {
-        cout << "Pista " << p+1 << ": ";
-
-        for (int id : pistas[p]) {
-            cout << id << " ";
-        }
-        
-        cout << endl;
-    }
-}
-
-void Airport::mostrarSolucaoBKPNoTerminal(int custo) {
-    
-    cout << "Custo total: " << custo << endl;
-    cout << "Alocacao de voos por pista:" << endl;
-
-    for (size_t p = 0; p < bkp_pistas.size(); ++p) {
-        cout << "Pista " << p+1 << ": ";
-
-        for (int id : bkp_pistas[p]) {
-            cout << id << " ";
-        }
-        
-        cout << endl;
-    }
-}
-
-
 bool Airport::executarAlocacao(const string& arquivo_entrada) {
 
     if (!lerDados(arquivo_entrada)) {
-        cerr << "Falha ao carregar dados.\n";
         return false;
     }
-    //clock_t start = clock();
     Guloso(this);
-    //clock_t start = clock();
-    //double elapsed = end - start;
-    //cout << "Guloso run in " << elapsed / CLOCKS_PER_SEC; << "s\n";
     calcularBKPMultas();
     bkp_custo = calcularBKPCustoTotal();
-    mostrarSolucaoBKPNoTerminal(bkp_custo);
     restaurarMelhorSolucao();
     return true;
-}
-
-// No arquivo airport.cpp, adicione a implementação:
-Voo* Airport::encontrarVooPorId(int id) {
-    for (auto& v : voos) {  // Note: não precisa de "airport.voos" porque está dentro da classe
-        if (v.id == id) {
-            return &v;
-        }
-    }
-    return nullptr;  // Retorna nullptr se não encontrar
 }
 
 //VND
 //vizinhancas
 bool Airport::inverterVoosConsecutivos(int pista, int posicao_voo) {
+
     // Verificação de validade
     if (pista < 0 || pista >= num_pistas || posicao_voo < 0 || posicao_voo >= static_cast<int>(pistas[pista].size()) - 1) {
-        cerr << "Invalido: pista=" << pista << ", pos=" << posicao_voo << endl;
         return false;
     }
 
@@ -206,22 +151,8 @@ bool Airport::inverterVoosConsecutivos(int pista, int posicao_voo) {
     }
 
     if (!voo1 || !voo2) {
-        cerr << "Erro: Voos nao encontrados (" << id_voo1 << " ou " << id_voo2 << ")" << endl;
         return false;
     }
-
-    /*/ DEBUG antes
-    cout << "\n=== ANTES DA INVERSAO ===" << endl;
-
-    cout << "Pista: " << pista << endl;
-    for (auto& id : bkp_pistas[pista]){
-
-        Voo* v = encontrarVooPorId(id);
-
-        cout << "\nVoo " << v->id << " || h_real: " << v->horario_real << " || h_prev: " << v->horario_prev
-        << "|| duracao: " << v->duracao 
-        << "|| multa: " << v->multa << "|| voo anterior: " << v->voo_anterior << endl;
-    }; */
 
     // Inverte as posições manualmente
     pistas[pista][posicao_voo] = id_voo2;
@@ -240,7 +171,6 @@ bool Airport::inverterVoosConsecutivos(int pista, int posicao_voo) {
 
     // Atualiza voo_anterior e horario_real de voo1 (agora atrás)
     voo1->voo_anterior = voo2->id;
-    cout << "voo2->id: " << voo2->id << endl;
     voo1->horario_real = max(voo1->horario_prev, voo2->horario_real + voo2->duracao + tempo_espera[voo1->id][voo2->id]);
 
     // Atualizando os voos após a posição do voo2
@@ -250,45 +180,15 @@ bool Airport::inverterVoosConsecutivos(int pista, int posicao_voo) {
 
         Voo* voo_atual = encontrarVooPorId(id_atual);
         Voo* voo_ant = encontrarVooPorId(id_anterior);
-        //Voo* voo_atual = &voos[id_atual];
-        //Voo* voo_ant = &voos[id_anterior];
 
         voo_atual->voo_anterior = voo_ant->id;
         voo_atual->horario_real = max(voo_atual->horario_prev, voo_ant->horario_real + voo_ant->duracao + tempo_espera[voo_ant->id][voo_atual->id]);
     }
     calcularMultas();
-    /*/ DEBUG depois
-    cout << "=== APOS INVERSAO ===" << endl;
-    
-    cout << "Pista: " << pista << endl;
-    for (auto& id : bkp_pistas[pista]){
-
-        Voo* v = encontrarVooPorId(id);
-
-        cout << "\nVoo " << v->id << " || h_real: " << v->horario_real << " || h_prev: " << v->horario_prev
-        << "|| duracao: " << v->duracao 
-        << "|| multa: " << v->multa << "|| voo anterior: " << v->voo_anterior << endl;
-    };*/
-
     return true;
 }
 
-
-
 bool Airport::insertIntraPista(int pista, int origem, int destino){
-
-    /*/ DEBUG antes
-    cout << "\n=== ANTES DA INVERSAO ===" << endl;
-     
-    cout << "Pista: " << pista << endl;
-    for (auto& id : bkp_pistas[pista]){
-
-        Voo* v = encontrarVooPorId(id);
-
-        cout << "\nVoo " << v->id << " || h_real: " << v->horario_real << " || h_prev: " << v->horario_prev
-        << "|| duracao: " << v->duracao 
-        << "|| multa: " << v->multa << "|| voo anterior: " << v->voo_anterior << endl;
-    };*/
 
     //verificação de movimentos invalidos ou irrelevantes
     if (pista < 0 || pista >= num_pistas ||
@@ -297,13 +197,11 @@ bool Airport::insertIntraPista(int pista, int origem, int destino){
         destino > static_cast<int>(pistas[pista].size()) ||
         origem == destino || abs(origem - destino) == 1) {
 
-        cerr << "Invalido: pista = " << pista << ", origem = " << origem << ", destino = " << destino << endl;
         return false;
     }
 
     //coloca voo origem no destino
     int id_voo_origem = pistas[pista][origem];
-    //int id_voo_destino = pistas[pista][destino];
 
     for (int i = origem; i < destino; i++){
         pistas[pista][i] = pistas[pista][i+1];
@@ -330,23 +228,6 @@ bool Airport::insertIntraPista(int pista, int origem, int destino){
     }
 
     calcularMultas();
-
-    /*/ Debug: mostra voos após inserção
-    cout << "=== APOS INVERSAO ===" << endl;
-    
-    cout << "Pista: " << pista << endl;
-    for (auto& id : bkp_pistas[pista]){
-
-        Voo* v = encontrarVooPorId(id);
-
-        cout << "\nVoo " << v->id << " || h_real: " << v->horario_real << " || h_prev: " << v->horario_prev
-        << "|| duracao: " << v->duracao 
-        << "|| multa: " << v->multa << "|| voo anterior: " << v->voo_anterior << endl;
-    };*/
-
-    for (int id : bkp_pistas[pista]) cout << id << " ";
-    cout << endl << endl;
-    
     return true;
 }
 
@@ -355,21 +236,8 @@ bool Airport::opt2IntraPista(int pista, int i, int j, int max_gap) {
     // Verificação completa
     if (pista < 0 || pista >= num_pistas || i < 0 || j <= i ||
         j >= static_cast<int>(pistas[pista].size()) || (j - i) > max_gap) {
-        cerr << "Invalido: pista=" << pista << ", i=" << i << ", j=" << j << ", max_gap=" << max_gap << endl;
         return false;
     }
-
-    /*/ Debug: mostra voos antes da operação OPT-2
-    cout << "\n=== ANTES DA OPERACAO OPT-2 ===" << endl;
-    cout << "Pista: " << pista << endl;
-    for (auto& id : bkp_pistas[pista]){
-
-        Voo* v = encontrarVooPorId(id);
-
-        cout << "\nVoo " << v->id << " || h_real: " << v->horario_real << " || h_prev: " << v->horario_prev
-        << "|| duracao: " << v->duracao 
-        << "|| multa: " << v->multa << "|| voo anterior: " << v->voo_anterior << endl;
-    };*/
 
     int aux = i;
     int aux_j = j;
@@ -385,7 +253,6 @@ bool Airport::opt2IntraPista(int pista, int i, int j, int max_gap) {
 
     }
 
-    //atualiza os babados
     for (size_t k = i; k < pistas[pista].size(); ++k) {
 
         Voo* voo_atual = encontrarVooPorId(pistas[pista][k]);
@@ -405,20 +272,6 @@ bool Airport::opt2IntraPista(int pista, int i, int j, int max_gap) {
         }
     }
 
-    calcularMultas();
-    
-    /*/ Debug: mostra voos após a operação OPT-2
-    cout << "\n=== APOS INVERSAO ===" << endl;
-    
-    cout << "Pista: " << pista << endl;
-    for (auto& id : bkp_pistas[pista]){
-
-        Voo* v = encontrarVooPorId(id);
-
-        cout << "\nVoo " << v->id << " || h_real: " << v->horario_real << " || h_prev: " << v->horario_prev
-        << "|| duracao: " << v->duracao 
-        << "|| multa: " << v->multa << "|| voo anterior: " << v->voo_anterior << endl;
-    };*/
-    
+    calcularMultas();    
     return true;
 }

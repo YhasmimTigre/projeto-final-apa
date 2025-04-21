@@ -29,7 +29,6 @@ class Airport {
 		int bkp_custo = 0;
 
 		bool executarAlocacao(const std::string& arquivo_entrada);
-		void mostrarSolucaoNoTerminal(int custo);
 		Voo* encontrarVooPorId(int id);
 
 		//vizinhanças
@@ -41,12 +40,12 @@ class Airport {
     	bool lerDados(const std::string& arquivo);		
 		int calcularCustoTotal();
 		void calcularMultas();
+		void escreverSolucao(const std::string& arquivo);
 		
 		void salvarMelhorSolucao();
 		void restaurarMelhorSolucao();
 		int calcularBKPCustoTotal();
 		void calcularBKPMultas();
-		void mostrarSolucaoBKPNoTerminal(int custo);
 
 		//copias para ils
 		Airport(const Airport& other) {

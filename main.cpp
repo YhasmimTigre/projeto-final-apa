@@ -1,12 +1,14 @@
 #include <iostream>
 #include <fstream>
-#include <ctime> 
+#include <ctime>
+#include <chrono> // Adicionar esta biblioteca para medir o tempo
 #include "src/heart/airport.h"
 #include "src/algorithms/vnd.h"
 #include "src/algorithms/guloso.h"
 #include "src/algorithms/ils.h"
 
 using namespace std;
+using namespace std::chrono; // Para usar o namespace de cronometragem
 
 int main(int argc, char* argv[]) {
 
@@ -18,15 +20,22 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    //guloso
-    if (!airport.executarAlocacao(argv[1])){
+    // Tempo total de execução
+    auto inicio_total = high_resolution_clock::now();
 
-        cerr << "Falha na alocação inicial" << endl;
+    //guloso
+    auto inicio_guloso = high_resolution_clock::now();
     
+    if (!airport.executarAlocacao(argv[1])){
+        cerr << "Falha na alocação inicial" << endl;
     }
+    
+    auto fim_guloso = high_resolution_clock::now();
+    auto duracao_guloso = duration_cast<milliseconds>(fim_guloso - inicio_guloso);
 
     saida << "Guloso:" << endl;
-    saida << airport.bkp_custo << endl;
+    saida << "Tempo de execução: " << duracao_guloso.count() << " ms" << endl;
+    saida << "Custo: " << airport.bkp_custo << endl;
     for (const auto& pista : airport.pistas) {
         for (int id : pista) {
             saida << id+1 << " "; 
@@ -35,9 +44,16 @@ int main(int argc, char* argv[]) {
     }
 
     //VND
+    auto inicio_vnd = high_resolution_clock::now();
+    
     VND(&airport);
+    
+    auto fim_vnd = high_resolution_clock::now();
+    auto duracao_vnd = duration_cast<milliseconds>(fim_vnd - inicio_vnd);
+
     saida << "\nVND:" << endl;
-    saida << airport.bkp_custo << endl;
+    saida << "Tempo de execução: " << duracao_vnd.count() << " ms" << endl;
+    saida << "Custo: " << airport.bkp_custo << endl;
     for (const auto& pista : airport.pistas) {
         for (int id : pista) {
             saida << id+1 << " "; 
@@ -46,81 +62,30 @@ int main(int argc, char* argv[]) {
     }
 
     //ILS
+    auto inicio_ils = high_resolution_clock::now();
+    
     int maxIter = 10;  // Número de iterações
     ILS(&airport, maxIter);
+    
+    auto fim_ils = high_resolution_clock::now();
+    auto duracao_ils = duration_cast<milliseconds>(fim_ils - inicio_ils);
+
     saida << "\nILS com " << maxIter << " iterações:" << endl;
-    saida << airport.bkp_custo << endl;
+    saida << "Tempo de execução: " << duracao_ils.count() << " ms" << endl;
+    saida << "Custo: " << airport.bkp_custo << endl;
     for (const auto& pista : airport.pistas) {
         for (int id : pista) {
             saida << id+1 << " "; 
         }
         saida << endl;
     }
-        
+    
+    // Tempo total
+    auto fim_total = high_resolution_clock::now();
+    auto duracao_total = duration_cast<milliseconds>(fim_total - inicio_total);
+    
+    saida << "\nTempo total de execução: " << duracao_total.count() << " ms" << endl;
+    
     saida.close();
-
-
-    /*/ 1. Carrega dados e executa alocação inicial (Guloso)
-    if (!airport.executarAlocacao(argv[1])) {
-
-        cerr << "Falha na alocação inicial" << endl;
-        return 1;
-    
-    }
-
-    for (auto& v : airport.bkp_voos){
-
-        cout << "\nVoo " << v.id << " || h_real: " << v.horario_real << " || h_prev: " << v.horario_prev
-        << "|| duracao: " << v.duracao 
-        << "|| multa: " << v.multa << "|| voo anterior: " << v.voo_anterior << endl;
-    };
-
-    clock_t start = clock();
-
-    //2. Executa VND na solução inicial
-    //VND(&airport);
-
-    clock_t end = clock();
-    double elapsed = end - start;
-    cout << elapsed / CLOCKS_PER_SEC; << "s\n";
-
-    for (size_t p = 0; p < airport.bkp_pistas.size(); p++) {
-        cout << "\n=== Pista " << p << " ===" << endl;
-        
-        for (size_t pos = 0; pos < airport.bkp_pistas[p].size(); pos++) {
-            int id_voo = airport.bkp_pistas[p][pos];
-            
-            // Encontra o voo correspondente no vetor de voos
-            Voo* voo = nullptr;
-
-            for (auto& v : airport.bkp_voos) {
-                if (v.id == id_voo) {
-                    voo = &v;
-                    break;
-                }
-            }
-            
-            if (voo) {
-                cout << "Voo " << voo->id 
-                     << " | HR: " << voo->horario_real 
-                     << " | HP: " << voo->horario_prev
-                     << " | Dur: " << voo->duracao 
-                     << " | Multa: " << voo->multa 
-                     << " | Ant: " << voo->voo_anterior << endl;
-            } else {
-                cout << "Voo " << id_voo << " (não encontrado!)" << endl;
-            }
-        }
-    };
-
-    int maxIter = 1;  // Número de iterações
-    ILS(&airport, maxIter);
-
-    
-    // 3. Mostra resultados
-    cout << "\n=== RESULTADO FINAL ===" << endl;
-    airport.mostrarSolucaoNoTerminal(airport.bkp_custo);
-    airport.escreverSolucao("solucao_final.txt");*/
-
     return 0;
 }

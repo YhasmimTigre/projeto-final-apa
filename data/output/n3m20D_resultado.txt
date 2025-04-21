@@ -1,0 +1,22 @@
+Guloso:
+Tempo de execução: 0 ms
+Custo: 12765
+4 2 3 15 6 1 16 
+18 12 11 19 20 5 7 
+10 17 9 8 14 13 
+
+VND:
+Tempo de execução: 0 ms
+Custo: 5667
+4 2 3 15 16 1 6 
+18 12 11 19 20 5 7 
+10 17 9 8 14 13 
+
+ILS com 10 iterações:
+Tempo de execução: 3 ms
+Custo: 5667
+4 2 3 15 16 1 6 
+18 12 11 19 20 5 7 
+10 17 9 8 14 13 
+
+Tempo total de execução: 4 ms
